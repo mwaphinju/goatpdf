@@ -5,8 +5,8 @@ import { PDFDocument } from "pdf-lib";
 import sharp from "sharp";
 import { afterAll, describe, expect, it } from "vitest";
 import { createJobWorkspace, writeWorkspaceFile } from "@/lib/files/tempStorage";
-import { jpgToPdf } from "@/lib/pdf/jpgToPdf";
-import { InvalidOptionsError, UnreadableFileError } from "@/lib/processing/errors";
+import { assertCombinedSizeWithinLimit, jpgToPdf, MAX_COMBINED_SIZE_BYTES } from "@/lib/pdf/jpgToPdf";
+import { InvalidOptionsError, TotalSizeTooLargeError, UnreadableFileError } from "@/lib/processing/errors";
 import type { ProcessingInputFile } from "@/lib/processing/types";
 
 const isolatedRoot = path.join(os.tmpdir(), "goatpdf-test-jpgtopdf");
@@ -122,6 +122,22 @@ describe("jpgToPdf — page size and orientation", () => {
     const outputDoc = await PDFDocument.load(await fs.readFile(result.outputs[0].path));
     const page = outputDoc.getPage(0);
     expect(page.getWidth() / page.getHeight()).toBeCloseTo(4, 1); // 400x100 -> 4:1
+  });
+});
+
+describe("assertCombinedSizeWithinLimit", () => {
+  it("allows a combined size at or under the limit", () => {
+    expect(() => assertCombinedSizeWithinLimit([10, 20, 30], 60)).not.toThrow();
+    expect(() => assertCombinedSizeWithinLimit([100], 100)).not.toThrow();
+  });
+
+  it("throws TotalSizeTooLargeError when the combined size exceeds the limit", () => {
+    expect(() => assertCombinedSizeWithinLimit([60, 60], 100)).toThrow(TotalSizeTooLargeError);
+  });
+
+  it("defaults to MAX_COMBINED_SIZE_BYTES when no limit is given", () => {
+    expect(() => assertCombinedSizeWithinLimit([MAX_COMBINED_SIZE_BYTES + 1])).toThrow(TotalSizeTooLargeError);
+    expect(() => assertCombinedSizeWithinLimit([MAX_COMBINED_SIZE_BYTES])).not.toThrow();
   });
 });
 

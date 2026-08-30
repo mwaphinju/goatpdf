@@ -3,8 +3,21 @@ import { PDFDocument } from "pdf-lib";
 import type { PDFImage } from "pdf-lib";
 import { contentTypeForFileName } from "@/lib/files/contentType";
 import { writeWorkspaceFile } from "@/lib/files/tempStorage";
-import { InvalidOptionsError, UnreadableFileError } from "@/lib/processing/errors";
+import { InvalidOptionsError, TotalSizeTooLargeError, UnreadableFileError } from "@/lib/processing/errors";
 import type { ProcessingContext, ProcessingResult } from "@/lib/processing/types";
+
+export const MAX_COMBINED_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB across all input images
+
+/** Pure size-limit check, kept separate from disk I/O so it's cheap to unit test with fabricated sizes. */
+export function assertCombinedSizeWithinLimit(
+  sizes: number[],
+  maxTotalBytes: number = MAX_COMBINED_SIZE_BYTES,
+): void {
+  const totalSize = sizes.reduce((sum, size) => sum + size, 0);
+  if (totalSize > maxTotalBytes) {
+    throw new TotalSizeTooLargeError(Math.round(maxTotalBytes / (1024 * 1024)));
+  }
+}
 
 export type PageSize = "a4" | "letter" | "fit";
 export type Orientation = "portrait" | "landscape";
@@ -58,6 +71,9 @@ export async function jpgToPdf(context: ProcessingContext): Promise<ProcessingRe
   if (!isJpgToPdfOptions(context.options)) {
     throw new InvalidOptionsError("Choose a page size before continuing.");
   }
+
+  const sizes = await Promise.all(context.files.map((file) => fs.stat(file.path).then((s) => s.size)));
+  assertCombinedSizeWithinLimit(sizes);
 
   const { pageSize, orientation, margin } = context.options;
   const marginPt = MARGIN_PT[margin];

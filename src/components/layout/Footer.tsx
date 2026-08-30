@@ -2,6 +2,13 @@ import Link from "next/link";
 import { LogoMark } from "@/components/icons";
 import { tools } from "@/lib/tools";
 
+const COMPANY_LINKS = [
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms of Service" },
+];
+
 export function Footer() {
   const year = new Date().getFullYear();
   const half = Math.ceil(tools.length / 2);
@@ -21,7 +28,7 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
           {columns.map((column, columnIndex) => (
             <ul key={columnIndex} className="flex flex-col gap-2">
               {column.map((tool) => (
@@ -36,11 +43,28 @@ export function Footer() {
               ))}
             </ul>
           ))}
+          <ul className="flex flex-col gap-2">
+            {COMPANY_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="text-sm text-slate-600 hover:text-emerald-700">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      <div className="border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 sm:px-6">
-        © {year} GOAT PDF. All processing happens automatically — no files are stored longer than necessary.
+      <div className="flex flex-col items-center gap-2 border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-400 sm:px-6">
+        <p>© {year} GOAT PDF. All processing happens automatically — no files are stored longer than necessary.</p>
+        <div className="flex gap-4">
+          <Link href="/privacy" className="hover:text-emerald-700">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-emerald-700">
+            Terms
+          </Link>
+        </div>
       </div>
     </footer>
   );

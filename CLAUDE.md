@@ -85,6 +85,10 @@ GOATPDF/
         jpg-to-pdf/page.tsx          # real tool — JpgToPdfTool
         pdf-to-jpg/page.tsx          # real tool — PdfToJpgTool
         pdf-to-word/page.tsx         # real tool — PdfToWordTool
+      privacy/page.tsx               # static — Privacy Policy, describes the actual implementation only
+      terms/page.tsx                 # static — Terms of Service
+      about/page.tsx                 # static — About GOAT PDF
+      contact/page.tsx               # static — Contact
       api/
         compress-pdf/route.ts        # POST — parses a preset form field
         merge-pdf/route.ts           # POST
@@ -115,6 +119,8 @@ GOATPDF/
         PdfToWordTool.tsx            # pdf-to-word's real, dedicated UI: no options, just a formatting disclaimer shown before *and* after conversion
         PageSelector.tsx             # shared page-picker grid (select all/none/invert) — used by Rotate, Delete, and PDF to JPG
         ReorderableFileList.tsx      # shared reorderable file list (move up/down + native drag) — used by Merge and JPG to PDF
+      legal/
+        LegalPageLayout.tsx           # shared title/"last updated"/section wrapper for privacy, terms, about, contact
       ToolCard.tsx
       icons.tsx                     # hand-written inline SVG icons — no icon library dependency
     lib/
@@ -134,10 +140,12 @@ GOATPDF/
         toolConfigs.ts                # the 8 tools' validation rules — all 8 now point at real processors
         runProcessingJob.ts           # shared orchestrator: validate → stage → run processor w/ timeout → cleanup on failure
         jobRegistry.ts                # in-memory jobId → output-file map backing the single-use download route
-        apiHelpers.ts                 # shared route plumbing: extractFilesFromFormData(), buildJobResponse(), HTTP status mapping
+        apiHelpers.ts                 # shared route plumbing: extractFilesFromFormData(), buildJobResponse(), HTTP status mapping, rateLimitResponse()
         timeout.ts                   # withTimeout() — races a processor against its configured timeout
         errors.ts                    # ProcessingJobError hierarchy — safe code+message, never raw internals
         logger.ts                    # logJobEvent() — structurally cannot accept file content, only {jobId, toolId, event, ...}
+      security/
+        rateLimit.ts                  # in-memory per-IP sliding-window limiter + periodic bucket sweep, run from instrumentation.ts
       pdf/
         loadPdf.ts                   # loadPdfOrThrow() — the one safe way every tool loads a PDF via pdf-lib; getPageCount() stays inside load()'s try/catch since pdf-lib can parse a broken PDF "successfully" and only throw once you touch its page tree
         pdfRenderer.ts                # renderPdfPagesToJpeg() — rasterizes PDF pages via pdfjs-dist + @napi-rs/canvas; see "PDF rasterization design notes" below
@@ -320,6 +328,14 @@ Work proceeds in this order. Do not skip ahead or batch phases.
 - **Phase 5.5 — UX consistency pass** ✅ *done*: every tool page now follows the same shape via shared components — [ToolPageLayout.tsx](src/components/tools/ToolPageLayout.tsx) (title/icon/description), [PdfPageCountStatus.tsx](src/components/tools/PdfPageCountStatus.tsx) (the "Reading your PDF… / N pages / couldn't read it" block, previously duplicated across Split/Rotate/Delete/PdfToJpg), [ToolActionBar.tsx](src/components/tools/ToolActionBar.tsx) (the primary-action + Start-over row, previously duplicated across all 8 tools), and [downloadFile.ts](src/lib/downloadFile.ts) (the blob-fetch download helper, previously duplicated with inconsistent error-fallback wording per tool). Added a "Related tools" section ([RelatedTools.tsx](src/components/tools/RelatedTools.tsx) + `getRelatedTools()` in [tools.ts](src/lib/tools.ts)) to every tool page. Accessibility fixes: focus-visible ring on UploadZone's dropzone and the small icon buttons in UploadZone/ReorderableFileList (also enlarged their touch targets), `motion-reduce:animate-none` on the processing spinner, `role="status"`/`aria-live="polite"` on the success state so screen readers announce completion. No functional/behavioral changes — verified by the full existing unit + Playwright suite passing unchanged (132 unit tests, 118 e2e tests).
 - **Phase 6 — SEO & content**: per-tool metadata, sitemap, robots.txt, structured data, real explanatory copy per tool page, OG images.
 - **Phase 7 — Polish, performance, mobile QA**: Lighthouse/performance pass, edge-case handling (corrupted/encrypted PDFs, oversized files). *(Cross-device responsiveness and the accessibility pass are substantially covered by Phase 5.5 above.)*
-- **Phase 8 — Security hardening & pre-launch**: rate limiting, security headers, dependency audit, cleanup mechanism stress test, full E2E pass across all 8 tools, **write the Dockerfile (with LibreOffice installed)**, deploy to the Docker PaaS, production smoke test.
+- **Phase 7.5 — Security & privacy hardening** ✅ *done*: a full audit of the security requirements above, plus:
+  - **Per-IP rate limiting** ([rateLimit.ts](src/lib/security/rateLimit.ts)): a simple in-memory sliding-window limiter (20 requests/5 min per IP across all 8 processing endpoints combined — sharing one bucket per IP so a client can't dodge the limit by spreading requests across tools; 60/5 min for the read-only download route), wired into every route via `rateLimitResponse()` in [apiHelpers.ts](src/lib/processing/apiHelpers.ts), 429 + `Retry-After` on the limit, periodic bucket sweep started from `instrumentation.ts` alongside the existing temp-file cleanup sweep. Disabled only via `GOATPDF_DISABLE_RATE_LIMIT=1`, set solely in `playwright.config.ts`'s `webServer.env` — every e2e request comes from one loopback connection with no `x-forwarded-for`, so real limiting would collapse the whole suite into a single bucket; never set in a real deployment.
+  - **Security headers** ([next.config.ts](next.config.ts)): CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Cross-Origin-Opener-Policy`, `Strict-Transport-Security`, applied to every route via `headers()`. The CSP's `script-src` and `style-src` both keep `'unsafe-inline'` — a deliberate, documented trade-off (see the comment above `CONTENT_SECURITY_POLICY`): the App Router injects its own inline hydration scripts on every page, and a correctly nonce'd CSP would require forcing every route (including the currently-static marketing/tool pages) into per-request dynamic rendering, which this pass didn't do. There's no known script-injection vector in the app to exploit via this (no `dangerouslySetInnerHTML`, no unsanitized user content ever rendered as markup). No `Access-Control-Allow-Origin` is set anywhere, which is what actually keeps `/api/*` responses unreadable from another origin.
+  - **Closed a combined-upload-size gap**: `jpgToPdf.ts` had no cap on the combined size of a multi-image batch (unlike `mergePdf.ts`'s existing 200 MB combined check) — added the same `assertCombinedSizeWithinLimit` pattern there too.
+  - **Static pages**: `/privacy`, `/terms`, `/about`, `/contact` ([LegalPageLayout.tsx](src/components/legal/LegalPageLayout.tsx) + one page each), linked from the footer. The Privacy Policy is written to describe the actual implementation only (temp-file TTL/sweep timing, exactly what's logged, IP handling for rate limiting, no cookies/analytics/accounts) — it makes no claim the code doesn't back up.
+  - Verified everything else in the security-requirements checklist above was already true from earlier phases (private per-job storage, single-use download links, random UUIDs, server-side magic-byte validation, path-traversal guards, processing timeouts, safe generic error messages, structurally-narrow logging).
+  - Full suite green throughout: 149 unit tests (17 new — rate limiting, CSP header configuration, jpg-to-pdf combined-size), 128 e2e tests (2 new — static pages, live security-header assertions), lint, typecheck, and a production build.
+  - **Not done here** (still Phase 8 below): a dependency audit, a dedicated cleanup-mechanism stress test, and the Dockerfile/deployment itself.
+- **Phase 8 — Pre-launch**: dependency audit, cleanup mechanism stress test, full E2E pass across all 8 tools, **write the Dockerfile (with LibreOffice installed)**, deploy to the Docker PaaS, production smoke test.
 
 AdSense integration is explicitly **out of scope** for all of the above phases and will be scoped separately after MVP launch.

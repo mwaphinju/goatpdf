@@ -1,10 +1,14 @@
 import { promises as fs } from "node:fs";
 import { removeWorkspace } from "@/lib/files/tempStorage";
 import { consumeJobOutput } from "@/lib/processing/jobRegistry";
+import { DOWNLOAD_RATE_LIMIT_PER_WINDOW, rateLimitResponse } from "@/lib/processing/apiHelpers";
 
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+  const limited = rateLimitResponse(request, "download", DOWNLOAD_RATE_LIMIT_PER_WINDOW);
+  if (limited) return limited;
+
   const { id } = await context.params;
 
   const output = consumeJobOutput(id);

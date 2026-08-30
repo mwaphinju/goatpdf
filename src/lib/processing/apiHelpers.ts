@@ -3,6 +3,7 @@ import { removeWorkspace } from "@/lib/files/tempStorage";
 import { registerJobOutput } from "@/lib/processing/jobRegistry";
 import type { JobResult } from "@/lib/processing/runProcessingJob";
 import type { RawUploadedFile } from "@/lib/processing/types";
+import { checkRateLimit } from "@/lib/security/rateLimit";
 
 export const JOB_ERROR_HTTP_STATUS: Record<string, number> = {
   UNKNOWN_TOOL: 400,
@@ -14,7 +15,27 @@ export const JOB_ERROR_HTTP_STATUS: Record<string, number> = {
   PROCESSING_TIMEOUT: 504,
   PROCESSING_FAILED: 500,
   NOT_IMPLEMENTED: 501,
+  RATE_LIMITED: 429,
 };
+
+// Shared across all 8 processing endpoints (not per-tool) so a client can't
+// bypass the limit by spreading requests across different tools.
+export const PROCESS_RATE_LIMIT_PER_WINDOW = 20;
+// The download route is read-only and normally called exactly once per
+// completed job, right after processing — a more generous limit than the
+// processing routes, mainly to blunt scripted job-id guessing attempts.
+export const DOWNLOAD_RATE_LIMIT_PER_WINDOW = 60;
+
+/** Returns a 429 Response if this request's IP has exceeded the given scope's rate limit, or null if it's within bounds. */
+export function rateLimitResponse(request: Request, scope: string, limit: number): Response | null {
+  const result = checkRateLimit(request, scope, limit);
+  if (result.ok) return null;
+
+  return Response.json(
+    { code: "RATE_LIMITED", message: "Too many requests. Please wait a moment and try again." },
+    { status: 429, headers: { "Retry-After": String(result.retryAfterSeconds) } },
+  );
+}
 
 /** Pulls every entry under `fieldName` out of a multipart FormData as raw file buffers, ready for runProcessingJob. */
 export async function extractFilesFromFormData(

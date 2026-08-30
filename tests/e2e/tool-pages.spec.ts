@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-import path from "node:path";
 
 const TOOLS = [
   { slug: "compress-pdf", name: "Compress PDF" },
@@ -22,24 +21,10 @@ for (const tool of TOOLS) {
   });
 }
 
-test("selecting a file enables the action button and shows the coming-soon notice", async ({ page }) => {
-  // pdf-to-word is the last unimplemented placeholder (uses the generic ToolPageShell) —
-  // rotate-pdf (Phase 5), compress-pdf (Phase 6), and pdf-to-jpg/jpg-to-pdf (Phase 7),
-  // used here previously, are all real now.
-  await page.goto("/tools/pdf-to-word");
-
-  const actionButton = page.getByRole("button", { name: "Convert to Word" });
-  await expect(actionButton).toBeDisabled();
-
-  const filePath = path.join(__dirname, "fixtures", "sample.pdf");
-  await page.locator('input[type="file"]').setInputFiles(filePath);
-
-  await expect(page.getByText("sample.pdf")).toBeVisible();
-  await expect(actionButton).toBeEnabled();
-
-  await actionButton.click();
-  await expect(page.getByText("This tool is coming soon")).toBeVisible();
-});
+// The "coming soon" ToolPageShell flow (previously tested here against whichever
+// tool was still unimplemented) no longer has a live route to test against — all
+// 8 tools now have real implementations, each covered by its own tests/e2e/*.spec.ts.
+// ToolPageShell.tsx itself is unused dead weight at this point and could be removed.
 
 test("404 page renders for an unknown tool slug", async ({ page }) => {
   const response = await page.goto("/tools/does-not-exist");

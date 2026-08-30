@@ -84,7 +84,7 @@ GOATPDF/
         delete-pdf-pages/page.tsx    # real tool — DeletePagesTool (note: slug is "delete-pdf-pages", not "delete-pages")
         jpg-to-pdf/page.tsx          # real tool — JpgToPdfTool
         pdf-to-jpg/page.tsx          # real tool — PdfToJpgTool
-        pdf-to-word/page.tsx
+        pdf-to-word/page.tsx         # real tool — PdfToWordTool
       api/
         compress-pdf/route.ts        # POST — parses a preset form field
         merge-pdf/route.ts           # POST
@@ -93,8 +93,8 @@ GOATPDF/
         delete-pdf-pages/route.ts    # POST — parses pages form field
         jpg-to-pdf/route.ts          # POST — parses pageSize/orientation/margin form fields
         pdf-to-jpg/route.ts          # POST — parses quality/pages form fields
-        download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download, content-type aware (pdf, zip, or jpeg)
-        pdf-to-word/route.ts         # not yet added
+        pdf-to-word/route.ts         # POST — no extra options, just the file
+        download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download, content-type aware (pdf, zip, jpeg, or docx)
       sitemap.ts                    # not yet added — Phase 6
       robots.ts                     # not yet added — Phase 6
     components/
@@ -102,7 +102,6 @@ GOATPDF/
       ui/                           # Button.tsx, UploadZone.tsx, ErrorMessage.tsx, ProcessingState.tsx, ResultDownload.tsx
       tools/
         ToolPageLayout.tsx           # shared heading/description wrapper, used by all 8 tool pages
-        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 1 unimplemented tool (PDF to Word)
         MergePdfTool.tsx             # merge-pdf's real, dedicated UI: add/remove/reorder files, real upload, processing/success/error states
         SplitPdfTool.tsx             # split-pdf's real, dedicated UI: client-side page count, all-pages/ranges mode, live range validation
         RotatePdfTool.tsx            # rotate-pdf's real, dedicated UI: angle picker, all-pages/selected-pages scope
@@ -110,6 +109,7 @@ GOATPDF/
         CompressPdfTool.tsx          # compress-pdf's real, dedicated UI: preset picker, measured original/compressed/saved/reduction stats
         JpgToPdfTool.tsx             # jpg-to-pdf's real, dedicated UI: reorderable multi-image upload, page size/orientation/margin
         PdfToJpgTool.tsx             # pdf-to-jpg's real, dedicated UI: quality picker, all-pages/select-pages scope
+        PdfToWordTool.tsx            # pdf-to-word's real, dedicated UI: no options, just a formatting disclaimer shown before *and* after conversion
         PageSelector.tsx             # shared page-picker grid (select all/none/invert) — used by Rotate, Delete, and PDF to JPG
         ReorderableFileList.tsx      # shared reorderable file list (move up/down + native drag) — used by Merge and JPG to PDF
       ToolCard.tsx
@@ -127,7 +127,7 @@ GOATPDF/
         contentType.ts                # extension → MIME type, for download response headers
       processing/
         types.ts                     # ToolId, ToolConfig, ToolProcessor, ProcessingContext (carries tool-specific `options`)/-Result
-        toolConfigs.ts                # the 8 tools' validation rules — 7 point at real processors, only pdf-to-word still throws NOT_IMPLEMENTED
+        toolConfigs.ts                # the 8 tools' validation rules — all 8 now point at real processors
         runProcessingJob.ts           # shared orchestrator: validate → stage → run processor w/ timeout → cleanup on failure
         jobRegistry.ts                # in-memory jobId → output-file map backing the single-use download route
         apiHelpers.ts                 # shared route plumbing: extractFilesFromFormData(), buildJobResponse(), HTTP status mapping
@@ -146,6 +146,7 @@ GOATPDF/
         compressPdf.ts                # real pdf-lib + sharp compression — see "Compress PDF design notes" below
         jpgToPdf.ts                   # real pdf-lib implementation — JPG/PNG in, one page per image, page size/orientation/margin
         pdfToJpg.ts                   # real implementation on top of pdfRenderer.ts — single JPEG or zipped JPEGs depending on page count
+        pdfToWord.ts                  # real implementation shelling out to LibreOffice headless — see "PDF to Word design notes" below
     types/
   instrumentation.ts                # Next.js server-startup hook — starts the cleanup scheduler
   tests/
@@ -153,9 +154,24 @@ GOATPDF/
       format.test.ts
       files/                        # validate, tempStorage (incl. traversal-protection tests), cleanup
       processing/                   # runProcessingJob.test.ts — valid/invalid/oversized/timeout/error/no-content-logging
-      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages, compressPdf, jpgToPdf, pdfToJpg — page order, corrupted-file handling, range/selection validation, combined-size limit, measured-reduction assertions, quality/resolution checks
-    e2e/                            # Playwright — homepage, navigation, tool-pages, and a full user-flow spec per implemented tool; fixtures/
+      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages, compressPdf, jpgToPdf, pdfToJpg, pdfToWord — page order, corrupted-file handling, range/selection validation, combined-size limit, measured-reduction assertions, quality/resolution checks, real-docx-content assertions
+    e2e/                            # Playwright — homepage, navigation, tool-pages, and a full user-flow spec per tool; fixtures/
 ```
+
+**All 8 MVP tools are now implemented.** `ToolPageShell.tsx` (the generic "coming soon" placeholder) and its `tests/e2e/fixtures/sample.pdf` fixture were deleted in Phase 8 once nothing referenced them anymore — every tool page now renders its own dedicated component.
+
+### PDF to Word design notes
+
+PDF to Word is the one tool that needs a real, external document-conversion engine — there's no reliable pure-JS way to reflow a PDF into an editable, styled Word document at reasonable fidelity. `pdfToWord.ts` shells out to a locally-installed **LibreOffice headless** (`soffice`), per the architecture decision documented since Phase 0.
+
+- **The critical, non-obvious flag: `--infilter=writer_pdf_import`.** Without it, LibreOffice imports a PDF into **Draw** (an editable-drawing representation) by default, and Draw has no DOCX export filter at all — every conversion attempt fails with "no export filter" / an `Io Class:Write` error, regardless of the `--convert-to docx` target. Forcing the Writer-specific PDF import filter is what makes genuine text reflow into an editable Word document possible. This took real trial-and-error to isolate (see the Phase 8 report) and is exactly the kind of detail that's easy to silently get wrong — if PDF to Word ever stops producing real DOCX output, check this flag first.
+- Runs with a **per-job LibreOffice user profile** (`-env:UserInstallation=<job workspace>/lo-profile`) — LibreOffice instances sharing a profile serialize on a lock file, so concurrent conversions need isolated profiles to avoid "another instance is already running" failures.
+- `execFile` with an **argument array** (never a shell string) — required by the "sanitize child-process calls" security rule; the input file path is never interpolated into a shell command.
+- A `timeout` slightly under the tool's configured job timeout, so the `soffice` child process itself gets killed rather than orphaned if `runProcessingJob`'s own timeout gives up on it first.
+- Validates with the same `loadPdfOrThrow` every other tool uses *before* ever spawning LibreOffice — catches corrupted and password-protected PDFs consistently, without depending on LibreOffice's own (less predictable) error behavior for those cases.
+- **No claim of perfect conversion, anywhere.** The UI shows an explicit formatting disclaimer both *before* conversion (setting expectations) and again on the success screen (prompting review) — conversion fidelity genuinely varies with document complexity (tables, unusual fonts, images), and that's stated plainly rather than glossed over.
+- `soffice` is resolved via `SOFFICE_PATH` (env override) → common Windows install paths → bare `soffice` on `PATH` (the expected case on Linux/Docker). **The Dockerfile still needs LibreOffice installed** for real deployment — not yet built (tracked in the phase list below).
+- This tool was developed and tested against a real local LibreOffice install (via `winget`, with the user's explicit approval first, since installing a ~300MB system-wide application is a meaningfully bigger action than an npm install) — not just written against assumed CLI behavior.
 
 ### PDF rasterization design notes
 
@@ -293,9 +309,12 @@ Work proceeds in this order. Do not skip ahead or batch phases.
   - **PDF to JPG**: real rasterization on top of a new pdfjs-dist + `@napi-rs/canvas` pipeline (see "PDF rasterization design notes" above) — three quality presets, every page or a selection via the shared [PageSelector](src/components/tools/PageSelector.tsx), single JPEG or zipped JPEGs depending on page count.
   - Both: unit tests (page count/order, page-size math, quality/resolution, corrupted-file handling) and full Playwright coverage of their user flows.
 - **Phase 4 — Compress PDF** ✅ *done*: real pdf-lib + `sharp` implementation ([compressPdf.ts](src/lib/pdf/compressPdf.ts)) recompressing embedded JPEG images (see "Compress PDF design notes" above for the deliberate safety scope). Three presets (Recommended / High Quality / Maximum Compression); dedicated UI ([CompressPdfTool.tsx](src/components/tools/CompressPdfTool.tsx)) reports actually-measured original size, compressed size, space saved, and percentage reduction — never a claimed/fixed percentage — and gracefully falls back to the original file (0% reduction, no error) when recompression doesn't help. Unit tests cover text/image-heavy/scanned/small/large/already-compressed PDFs plus the CMYK/non-JPEG safety-scope boundaries; full Playwright coverage of the user flow across the same file categories.
-- **Phase 5 — PDF to Word**: LibreOffice headless integration, Dockerfile finalized with LibreOffice installed, conversion failure handling.
+- **Phase 5 — PDF to Word** ✅ *done*: real LibreOffice headless integration ([pdfToWord.ts](src/lib/pdf/pdfToWord.ts) — see "PDF to Word design notes" above), conversion-failure handling (`ConversionFailedError`, distinct from corrupted-file handling), explicit before-and-after formatting disclaimer. **Not done yet:** the Dockerfile still needs LibreOffice installed for real deployment — this tool was developed and tested against a local LibreOffice install, not inside a container.
+
+**🎉 All 8 MVP tools are now fully implemented, unit-tested, and covered by Playwright end-to-end flows.** What remains before launch is entirely infrastructure/polish, not tool functionality:
+
 - **Phase 6 — SEO & content**: per-tool metadata, sitemap, robots.txt, structured data, real explanatory copy per tool page, OG images.
 - **Phase 7 — Polish, performance, mobile QA**: cross-device responsiveness pass, Lighthouse/performance pass, accessibility pass, edge-case handling (corrupted/encrypted PDFs, oversized files).
-- **Phase 8 — Security hardening & pre-launch**: rate limiting, security headers, dependency audit, cleanup mechanism stress test, full E2E pass across all 8 tools, deploy to the Docker PaaS, production smoke test.
+- **Phase 8 — Security hardening & pre-launch**: rate limiting, security headers, dependency audit, cleanup mechanism stress test, full E2E pass across all 8 tools, **write the Dockerfile (with LibreOffice installed)**, deploy to the Docker PaaS, production smoke test.
 
 AdSense integration is explicitly **out of scope** for all of the above phases and will be scoped separately after MVP launch.

@@ -4,24 +4,11 @@ import { deletePages } from "@/lib/pdf/deletePages";
 import { jpgToPdf } from "@/lib/pdf/jpgToPdf";
 import { mergePdf } from "@/lib/pdf/mergePdf";
 import { pdfToJpg } from "@/lib/pdf/pdfToJpg";
+import { pdfToWord } from "@/lib/pdf/pdfToWord";
 import { rotatePdf } from "@/lib/pdf/rotatePdf";
 import { splitPdf } from "@/lib/pdf/splitPdf";
-import { ToolNotImplementedError } from "@/lib/processing/errors";
+import type { ToolConfig, ToolId } from "@/lib/processing/types";
 import { DEFAULT_PROCESSING_TIMEOUT_MS } from "@/lib/processing/timeout";
-import type { ToolConfig, ToolId, ToolProcessor } from "@/lib/processing/types";
-
-/**
- * Every tool's processor is a placeholder for now — this phase builds the
- * shared validation/storage/timeout/error-handling architecture that each
- * tool will plug a real implementation into, one tool at a time, in a later
- * phase. Swapping a processor here is the only change a future phase needs
- * to make; nothing else in the pipeline changes.
- */
-function notImplemented(toolId: ToolId): ToolProcessor {
-  return async () => {
-    throw new ToolNotImplementedError(toolId);
-  };
-}
 
 export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
   "compress-pdf": {
@@ -105,7 +92,7 @@ export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
     // LibreOffice conversion is slower than the pure-JS tools; give it more room.
     timeoutMs: 120_000,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
-    processor: notImplemented("pdf-to-word"),
+    processor: pdfToWord,
   },
 };
 

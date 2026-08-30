@@ -58,3 +58,19 @@ export class InvalidOptionsError extends ProcessingJobError {
     this.name = "InvalidOptionsError";
   }
 }
+
+/**
+ * A well-formed, readable PDF (already passed loadPdfOrThrow) could still
+ * not be converted — the external LibreOffice process failed, timed out,
+ * or produced no output. Not necessarily the user's fault; the message is
+ * deliberately non-committal about the cause rather than guessing.
+ */
+export class ConversionFailedError extends ProcessingJobError {
+  constructor() {
+    super(
+      "PROCESSING_FAILED",
+      "We couldn't convert this PDF to Word. It may be too complex, use unsupported formatting, or be password-protected. Please try again, or try a different tool.",
+    );
+    this.name = "ConversionFailedError";
+  }
+}

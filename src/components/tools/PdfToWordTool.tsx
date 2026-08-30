@@ -1,0 +1,139 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { ErrorMessage } from "@/components/ui/ErrorMessage";
+import { ProcessingState } from "@/components/ui/ProcessingState";
+import { ResultDownload } from "@/components/ui/ResultDownload";
+import { UploadZone } from "@/components/ui/UploadZone";
+import { formatBytes } from "@/lib/format";
+
+type FlowState =
+  | { status: "idle" }
+  | { status: "processing" }
+  | { status: "success"; downloadUrl: string; fileName: string; fileSizeLabel: string }
+  | { status: "error"; message: string };
+
+const FORMATTING_NOTICE =
+  "Conversion quality depends on your PDF. Complex layouts, tables, unusual fonts, and images may not come out exactly as they looked in the original — always review the converted document before using it.";
+
+export function PdfToWordTool() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [flow, setFlow] = useState<FlowState>({ status: "idle" });
+
+  const file = files[0] ?? null;
+
+  function reset() {
+    setFiles([]);
+    setFlow({ status: "idle" });
+  }
+
+  async function handleConvert() {
+    if (!file) return;
+    setFlow({ status: "processing" });
+
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+
+      const response = await fetch("/api/pdf-to-word", { method: "POST", body: formData });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok || !data) {
+        setFlow({
+          status: "error",
+          message: data?.message ?? "Something went wrong while converting your PDF. Please try again.",
+        });
+        return;
+      }
+
+      setFlow({
+        status: "success",
+        downloadUrl: data.downloadUrl,
+        fileName: data.fileName,
+        fileSizeLabel: formatBytes(data.fileSize),
+      });
+    } catch {
+      setFlow({
+        status: "error",
+        message: "Network error — please check your connection and try again.",
+      });
+    }
+  }
+
+  async function handleDownload() {
+    if (flow.status !== "success") return;
+
+    try {
+      const response = await fetch(flow.downloadUrl);
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        setFlow({
+          status: "error",
+          message: data?.message ?? "This download link has expired. Please try again.",
+        });
+        return;
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = flow.fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      setFlow({ status: "error", message: "Network error while downloading. Please try again." });
+    }
+  }
+
+  if (flow.status === "success") {
+    return (
+      <div className="flex flex-col gap-6">
+        <ResultDownload
+          fileName={flow.fileName}
+          fileSizeLabel={flow.fileSizeLabel}
+          downloadUrl={flow.downloadUrl}
+          onDownload={handleDownload}
+          onReset={reset}
+        />
+        <ErrorMessage tone="info" title="Please double-check the formatting" message={FORMATTING_NOTICE} />
+      </div>
+    );
+  }
+
+  if (flow.status === "processing") {
+    return <ProcessingState label="Converting your PDF to Word… this can take a little longer than other tools." />;
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <UploadZone
+        accept="application/pdf"
+        multiple={false}
+        maxSizeMB={50}
+        files={files}
+        onFilesChange={setFiles}
+        label="Drag and drop your PDF file here"
+        hint="Up to 50 MB. Files are processed privately and deleted automatically."
+      />
+
+      {file && <ErrorMessage tone="info" title="Before you convert" message={FORMATTING_NOTICE} />}
+
+      {flow.status === "error" && <ErrorMessage message={flow.message} />}
+
+      <div className="flex flex-wrap gap-3">
+        <Button size="lg" disabled={!file} onClick={handleConvert}>
+          Convert to Word
+        </Button>
+        {file && (
+          <Button size="lg" variant="secondary" onClick={reset}>
+            Start over
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}

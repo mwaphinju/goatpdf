@@ -13,11 +13,13 @@ A free, fast, mobile-friendly PDF utility website. No accounts, no payments, no 
 5. **Delete PDF Pages — live** (`/tools/delete-pdf-pages`)
 6. **JPG to PDF — live**
 7. **PDF to JPG — live**
-8. PDF to Word — *coming soon*
+8. **PDF to Word — live**
 
 ## Status
 
-🚧 **7 of 8 tools are fully working** — only PDF to Word remains a placeholder. Compress: pick Recommended / High Quality / Maximum Compression and see the actual original size, compressed size, space saved, and percentage reduction — never a claimed fixed percentage, and never a file larger than what you uploaded. Merge: upload, add/remove/reorder files, merge, download, start over. Split: see the page count, split into individual pages (as a ZIP) or extract specific page ranges (e.g. `1-3, 5, 7-9`). Rotate: 90°/180°/270°, every page or a chosen subset. Delete Pages: pick pages from a grid and remove them (you can't delete every page). JPG to PDF: upload JPG or PNG images, reorder them, choose page size/orientation/margins. PDF to JPG: choose image quality and convert every page or a selection, downloading a single JPEG or a ZIP. All seven are backed by real processing, secure file validation, random-UUID temp storage with automatic cleanup, and single-use download links. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
+🎉 **All 8 MVP tools are fully working.** Compress: pick Recommended / High Quality / Maximum Compression and see the actual original size, compressed size, space saved, and percentage reduction — never a claimed fixed percentage, and never a file larger than what you uploaded. Merge: upload, add/remove/reorder files, merge, download, start over. Split: see the page count, split into individual pages (as a ZIP) or extract specific page ranges (e.g. `1-3, 5, 7-9`). Rotate: 90°/180°/270°, every page or a chosen subset. Delete Pages: pick pages from a grid and remove them (you can't delete every page). JPG to PDF: upload JPG or PNG images, reorder them, choose page size/orientation/margins. PDF to JPG: choose image quality and convert every page or a selection, downloading a single JPEG or a ZIP. PDF to Word: converts via a real local LibreOffice install, with an explicit disclaimer that formatting isn't guaranteed to be preserved perfectly. All eight are backed by real processing, secure file validation, random-UUID temp storage with automatic cleanup, and single-use download links.
+
+What's left before launch is infrastructure and polish, not tool functionality: SEO metadata/sitemap, a mobile/accessibility/performance pass, and security hardening + a Dockerfile (with LibreOffice installed) for real deployment. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
 
 ## How it works
 
@@ -39,6 +41,8 @@ No database. No user accounts. See [CLAUDE.md](./CLAUDE.md) for the full archite
 npm install
 npm run dev          # http://localhost:3000
 ```
+
+PDF to Word needs a local **LibreOffice** install (`soffice` on `PATH`, or at the default Windows install location, or point `SOFFICE_PATH` at the binary). Every other tool works with just `npm install`. Without LibreOffice, PDF to Word will fail with a clear "couldn't convert" error rather than crashing anything else.
 
 ## Testing
 

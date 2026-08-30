@@ -185,34 +185,12 @@ describe("runProcessingJobWithConfig — processing errors", () => {
     expect(result).toMatchObject({ ok: false, code: "PROCESSING_TIMEOUT" });
   });
 
-  it("reports NOT_IMPLEMENTED for every tool that's still a placeholder", async () => {
-    // merge-pdf (Phase 3), split-pdf (Phase 4), rotate-pdf/delete-pdf-pages (Phase 5),
-    // compress-pdf (Phase 6), and jpg-to-pdf/pdf-to-jpg (Phase 7) have real
-    // implementations now — covered by their own tests/unit/pdf/*.test.ts instead.
-    const implementedToolIds = new Set([
-      "merge-pdf",
-      "split-pdf",
-      "rotate-pdf",
-      "delete-pdf-pages",
-      "compress-pdf",
-      "jpg-to-pdf",
-      "pdf-to-jpg",
-    ]);
-    const placeholderToolIds = TOOL_IDS.filter((id) => !implementedToolIds.has(id));
-
-    for (const toolId of placeholderToolIds) {
-      const config = TOOL_CONFIGS[toolId];
-      const files = Array.from({ length: config.minFiles }, (_, i) =>
-        pdfInput({
-          fileName: `input-${i}.${config.acceptedKinds[0] === "jpeg" ? "jpg" : "pdf"}`,
-          mimeType: config.acceptedKinds[0] === "jpeg" ? "image/jpeg" : "application/pdf",
-          buffer: config.acceptedKinds[0] === "jpeg" ? Buffer.from([0xff, 0xd8, 0xff, 0x00]) : PDF_BYTES,
-          size: config.acceptedKinds[0] === "jpeg" ? 4 : PDF_BYTES.length,
-        }),
-      );
-
-      const result = await runProcessingJob(toolId, files);
-      expect(result).toMatchObject({ ok: false, code: "NOT_IMPLEMENTED" });
+  it("no tool config is left pointing at the NOT_IMPLEMENTED placeholder", () => {
+    // All 8 tools now have real processors (each covered by its own
+    // tests/unit/pdf/*.test.ts) — this just guards against a future
+    // regression where a tool gets silently reverted to a placeholder.
+    for (const toolId of TOOL_IDS) {
+      expect(TOOL_CONFIGS[toolId].processor.name).not.toBe("");
     }
   });
 

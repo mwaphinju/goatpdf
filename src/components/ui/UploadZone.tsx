@@ -14,6 +14,8 @@ export interface UploadZoneProps {
   onFilesChange: (files: File[]) => void;
   label?: string;
   hint?: string;
+  /** Hides the built-in selected-files list — for tools that render their own (e.g. a reorderable list). */
+  hideFileList?: boolean;
 }
 
 function extensionsFromAccept(accept: string): string[] {
@@ -30,6 +32,7 @@ export function UploadZone({
   onFilesChange,
   label = "Drag and drop your file here",
   hint,
+  hideFileList = false,
 }: UploadZoneProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -134,7 +137,7 @@ export function UploadZone({
         </p>
       )}
 
-      {files.length > 0 && (
+      {!hideFileList && files.length > 0 && (
         <ul className="mt-4 flex flex-col gap-2">
           {files.map((file, index) => (
             <li

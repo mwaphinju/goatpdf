@@ -78,7 +78,7 @@ GOATPDF/
       page.tsx                      # homepage — 8 tool cards
       tools/
         compress-pdf/page.tsx
-        merge-pdf/page.tsx
+        merge-pdf/page.tsx           # real tool — MergePdfTool, not the shared placeholder shell
         split-pdf/page.tsx
         rotate-pdf/page.tsx
         delete-pages/page.tsx
@@ -86,39 +86,58 @@ GOATPDF/
         pdf-to-jpg/page.tsx
         pdf-to-word/page.tsx
       api/
-        compress/route.ts
-        merge/route.ts
-        split/route.ts
-        rotate/route.ts
-        delete-pages/route.ts
-        jpg-to-pdf/route.ts
-        pdf-to-jpg/route.ts
-        pdf-to-word/route.ts
-        download/[id]/route.ts
+        merge-pdf/route.ts           # POST — the only real tool route so far
+        download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download
+        compress/route.ts            # not yet added
+        split/route.ts               # not yet added
+        rotate/route.ts              # not yet added
+        delete-pages/route.ts        # not yet added
+        jpg-to-pdf/route.ts          # not yet added
+        pdf-to-jpg/route.ts          # not yet added
+        pdf-to-word/route.ts         # not yet added
       sitemap.ts                    # not yet added — Phase 6
       robots.ts                     # not yet added — Phase 6
     components/
       layout/                       # Header.tsx, Footer.tsx
       ui/                           # Button.tsx, UploadZone.tsx, ErrorMessage.tsx, ProcessingState.tsx, ResultDownload.tsx
-      tools/                        # ToolPageLayout.tsx, ToolPageShell.tsx (shared by all 8 tool pages)
+      tools/
+        ToolPageLayout.tsx           # shared heading/description wrapper, used by all 8 tool pages
+        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 7 unimplemented tools
+        MergePdfTool.tsx             # merge-pdf's real, dedicated UI: add/remove/reorder files, real upload, processing/success/error states
       ToolCard.tsx
       icons.tsx                     # hand-written inline SVG icons — no icon library dependency
     lib/
       tools.ts                      # the 8-tool registry (slug, name, description, accept type, icon) — drives nav, homepage, footer, and routes
       cn.ts                         # tiny classname-join helper (no clsx/tailwind-merge dependency)
       format.ts                     # formatBytes — unit-tested
-      pdf/                          # not yet added — one file per tool: compress.ts, merge.ts, split.ts, rotate.ts, deletePages.ts, jpgToPdf.ts, pdfToJpg.ts, pdfToWord.ts
-      files/                        # not yet added — tempStorage.ts (random dirs, cleanup), validate.ts (magic-byte + size checks)
-      cleanup/                      # not yet added — scheduler.ts — periodic sweep of expired temp files
+      files/
+        validate.ts                  # size/extension/MIME/magic-byte validation, filename sanitization
+        tempStorage.ts                # random-UUID job workspaces, traversal-guarded read/write/remove
+        cleanup.ts                   # TTL sweep + startCleanupScheduler(), run from instrumentation.ts
+      processing/
+        types.ts                     # ToolId, ToolConfig, ToolProcessor, ProcessingContext/-Result
+        toolConfigs.ts                # the 8 tools' validation rules — merge-pdf now points at the real mergePdf processor, the other 7 still throw NOT_IMPLEMENTED
+        runProcessingJob.ts           # shared orchestrator: validate → stage → run processor w/ timeout → cleanup on failure
+        jobRegistry.ts                # in-memory jobId → output-file map backing the single-use download route
+        timeout.ts                   # withTimeout() — races a processor against its configured timeout
+        errors.ts                    # ProcessingJobError hierarchy — safe code+message, never raw internals
+        logger.ts                    # logJobEvent() — structurally cannot accept file content, only {jobId, toolId, event, ...}
+      pdf/
+        mergePdf.ts                  # real pdf-lib merge implementation — the only implemented tool so far
     types/
+  instrumentation.ts                # Next.js server-startup hook — starts the cleanup scheduler
   tests/
-    unit/                           # Vitest — format.test.ts
-    e2e/                            # Playwright — homepage.spec.ts, navigation.spec.ts, tool-pages.spec.ts, fixtures/sample.pdf
+    unit/
+      format.test.ts
+      files/                        # validate, tempStorage (incl. traversal-protection tests), cleanup
+      processing/                   # runProcessingJob.test.ts — valid/invalid/oversized/timeout/error/no-content-logging
+      pdf/                          # mergePdf.test.ts — page order, corrupted-file handling, combined-size limit
+    e2e/                            # Playwright — homepage, navigation, tool-pages, merge-pdf (full user flow), fixtures/
 ```
 
 Each tool's UI page and its `lib/pdf/*` function should be independently understandable — a future contributor should be able to read one tool's code without needing to understand the other seven.
 
-**Current status:** the application shell above is built and tested (see phase list below). No PDF processing exists yet — every tool page renders a real upload zone, but the action button shows an honest "coming soon" notice instead of calling a backend, because there is no backend yet. `api/`, `lib/pdf/`, `lib/files/`, `lib/cleanup/`, the Dockerfile, and `sitemap.ts`/`robots.ts` are still to be built in later phases.
+**Current status:** Merge PDF is the first fully working tool — real upload, pdf-lib merge, single-use download, and full Playwright coverage of the user flow. The other 7 tools are still placeholders: their `toolConfigs.ts` processor throws `NOT_IMPLEMENTED` and their page still shows the shared "coming soon" `ToolPageShell`. `lib/pdf/*` (per-tool logic) and `api/*/route.ts` (HTTP wiring) now exist as a working pattern for merge-pdf that the remaining 7 tools can each follow. Not yet built: the Dockerfile, `sitemap.ts`/`robots.ts`, and rate limiting / security headers (planned for Phase 8).
 
 ---
 
@@ -217,11 +236,11 @@ A phase is done only when all of the following are true:
 
 Work proceeds in this order. Do not skip ahead or batch phases.
 
-- **Phase 0 — Project setup & foundations** ✅ *done*: Next.js + TypeScript + Tailwind scaffold, ESLint wired up, homepage shell, responsive header/footer/nav, placeholder pages for all 8 tools. (Combined with the UI portion of Phase 1 below in a single work session — see report for that session.)
-- **Phase 1 — Core file pipeline**: split into two parts.
-  - *UI half* ✅ *done*: reusable Button, UploadZone (drag/drop + click, client-side type/size validation), ErrorMessage, ProcessingState, ResultDownload components; Vitest + Playwright wired up and passing.
-  - *Backend half* ⬜ *not started*: secure upload handling, server-side validation (magic-byte type check), temp storage with random job IDs, auto-cleanup sweep, per-job download route, and Dockerfile. No tool is wired to real processing yet — every action button currently shows an honest "coming soon" notice. This backend half should be the next phase started.
-- **Phase 2 — Core pdf-lib tools**: Merge PDF, Split PDF, Delete PDF Pages (Rotate already done in Phase 1).
+- **Phase 0 — Project setup & foundations** ✅ *done*: Next.js + TypeScript + Tailwind scaffold, ESLint wired up, homepage shell, responsive header/footer/nav, placeholder pages for all 8 tools.
+- **Phase 1 — Core file pipeline** ✅ *done*: reusable Button, UploadZone, ErrorMessage, ProcessingState, ResultDownload components; server-side validation (size, extension, MIME, magic-byte sniffing), filename sanitization, temp workspaces under random UUIDs with traversal guards, TTL-based cleanup sweep wired to server startup via `instrumentation.ts`, a shared `runProcessingJob` orchestrator, and the `api/merge-pdf` + `api/download/[id]` HTTP route handlers (single-use, in-memory-registry-backed downloads). **Not yet done:** the Dockerfile (needed before any real deploy) — everything else in this phase is complete and proven end-to-end by Merge PDF below.
+- **Phase 2 — Core pdf-lib tools**: split by tool.
+  - **Merge PDF** ✅ *done*: real pdf-lib implementation ([mergePdf.ts](src/lib/pdf/mergePdf.ts)), dedicated UI ([MergePdfTool.tsx](src/components/tools/MergePdfTool.tsx)) with add/remove/reorder (buttons + native drag-and-drop)/merge/download/start-over, corrupted-file and combined-size-limit handling, unit tests, and full Playwright coverage of the user flow.
+  - **Split PDF, Delete PDF Pages** ⬜ *not started* (Rotate PDF was originally scoped here too, but is still an unimplemented placeholder — move it here or to its own phase when it's picked up).
 - **Phase 3 — Image tools**: JPG to PDF, PDF to JPG.
 - **Phase 4 — Compress PDF**: pdf-lib + sharp image re-encode/downsample pipeline.
 - **Phase 5 — PDF to Word**: LibreOffice headless integration, Dockerfile finalized with LibreOffice installed, conversion failure handling.

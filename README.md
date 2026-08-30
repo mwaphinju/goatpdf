@@ -6,18 +6,18 @@ A free, fast, mobile-friendly PDF utility website. No accounts, no payments, no 
 
 ## Tools (MVP)
 
-1. Compress PDF
-2. Merge PDF
-3. Split PDF
-4. Rotate PDF
-5. Delete PDF Pages
-6. JPG to PDF
-7. PDF to JPG
-8. PDF to Word
+1. Compress PDF — *coming soon*
+2. **Merge PDF — live**
+3. Split PDF — *coming soon*
+4. Rotate PDF — *coming soon*
+5. Delete PDF Pages — *coming soon*
+6. JPG to PDF — *coming soon*
+7. PDF to JPG — *coming soon*
+8. PDF to Word — *coming soon*
 
 ## Status
 
-🚧 Application shell built (Phase 0 + Phase 1 UI). The site has a working homepage, responsive navigation, and a placeholder page for each of the 8 tools with a real (client-side validated) upload zone — but no PDF processing yet; each tool's action button shows a "coming soon" notice. The server-side upload/processing pipeline is the next phase. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
+🚧 **Merge PDF is fully working** — upload, add/remove/reorder files, merge, download, start over — backed by a real pdf-lib implementation, secure file validation, random-UUID temp storage with automatic cleanup, and a single-use download link. The other 7 tools are still placeholder pages with a working upload zone but a "coming soon" notice instead of real processing. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
 
 ## How it works
 

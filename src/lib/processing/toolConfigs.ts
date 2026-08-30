@@ -1,5 +1,6 @@
 import { MAX_FILE_SIZE_BYTES } from "@/lib/files/validate";
 import { mergePdf } from "@/lib/pdf/mergePdf";
+import { splitPdf } from "@/lib/pdf/splitPdf";
 import { ToolNotImplementedError } from "@/lib/processing/errors";
 import { DEFAULT_PROCESSING_TIMEOUT_MS } from "@/lib/processing/timeout";
 import type { ToolConfig, ToolId, ToolProcessor } from "@/lib/processing/types";
@@ -46,7 +47,7 @@ export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
     maxFiles: 1,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
     timeoutMs: DEFAULT_PROCESSING_TIMEOUT_MS,
-    processor: notImplemented("split-pdf"),
+    processor: splitPdf,
   },
   "rotate-pdf": {
     id: "rotate-pdf",

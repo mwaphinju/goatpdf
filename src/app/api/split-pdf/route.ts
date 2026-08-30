@@ -1,5 +1,6 @@
 import { buildJobResponse, extractFilesFromFormData } from "@/lib/processing/apiHelpers";
 import { runProcessingJob } from "@/lib/processing/runProcessingJob";
+import type { SplitPdfOptions } from "@/lib/pdf/splitPdf";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,16 @@ export async function POST(request: Request) {
   }
 
   const files = await extractFilesFromFormData(formData);
-  const result = await runProcessingJob("merge-pdf", files);
+  const mode = formData.get("mode");
+
+  let options: SplitPdfOptions;
+  if (mode === "ranges") {
+    const ranges = formData.get("ranges");
+    options = { mode: "ranges", ranges: typeof ranges === "string" ? ranges : "" };
+  } else {
+    options = { mode: "all-pages" };
+  }
+
+  const result = await runProcessingJob("split-pdf", files, options);
   return buildJobResponse(result);
 }

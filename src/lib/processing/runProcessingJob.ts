@@ -29,13 +29,17 @@ const GENERIC_FAILURE_MESSAGE = "Something went wrong while processing your file
  * tools; validation, storage, timeout handling, error handling, and cleanup
  * are identical for all 8 tools.
  */
-export async function runProcessingJob(toolId: string, files: RawUploadedFile[]): Promise<JobResult> {
+export async function runProcessingJob(
+  toolId: string,
+  files: RawUploadedFile[],
+  options?: unknown,
+): Promise<JobResult> {
   const config = getToolConfig(toolId);
   if (!config) {
     return { ok: false, code: "UNKNOWN_TOOL", message: "That tool doesn't exist." };
   }
 
-  return runProcessingJobWithConfig(toolId, config, files);
+  return runProcessingJobWithConfig(toolId, config, files, options);
 }
 
 /**
@@ -48,6 +52,7 @@ export async function runProcessingJobWithConfig(
   toolId: string,
   config: ToolConfig,
   files: RawUploadedFile[],
+  options?: unknown,
 ): Promise<JobResult> {
   if (files.length < config.minFiles) {
     return {
@@ -92,7 +97,7 @@ export async function runProcessingJobWithConfig(
     );
 
     const result = await withTimeout(
-      config.processor({ jobId: workspace.id, workspaceDir: workspace.dir, files: inputFiles }),
+      config.processor({ jobId: workspace.id, workspaceDir: workspace.dir, files: inputFiles, options }),
       config.timeoutMs,
     );
 

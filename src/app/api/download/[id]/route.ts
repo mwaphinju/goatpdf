@@ -21,7 +21,7 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
     return new Response(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
-        "Content-Type": "application/pdf",
+        "Content-Type": output.contentType,
         "Content-Disposition": `attachment; filename="${output.fileName}"`,
         "Content-Length": String(fileBuffer.length),
         "Cache-Control": "no-store",

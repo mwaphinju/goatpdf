@@ -1,6 +1,7 @@
 export interface RegisteredJobOutput {
   filePath: string;
   fileName: string;
+  contentType: string;
   workspaceDir: string;
 }
 

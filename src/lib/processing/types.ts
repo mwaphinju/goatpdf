@@ -32,11 +32,14 @@ export interface ProcessingContext {
   jobId: string;
   workspaceDir: string;
   files: ProcessingInputFile[];
+  /** Tool-specific parameters (e.g. split-pdf's mode/ranges). Each processor validates and narrows its own shape — never trust it without checking. */
+  options?: unknown;
 }
 
 export interface ProcessingOutputFile {
   path: string;
   fileName: string;
+  contentType: string;
 }
 
 export interface ProcessingResult {

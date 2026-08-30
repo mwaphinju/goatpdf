@@ -50,3 +50,11 @@ export class TotalSizeTooLargeError extends ProcessingJobError {
     this.name = "TotalSizeTooLargeError";
   }
 }
+
+/** A tool's own options (e.g. split-pdf's mode/ranges) failed validation inside the processor, after the generic per-file checks already passed. */
+export class InvalidOptionsError extends ProcessingJobError {
+  constructor(message: string) {
+    super("VALIDATION_FAILED", message);
+    this.name = "InvalidOptionsError";
+  }
+}

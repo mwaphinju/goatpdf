@@ -1,5 +1,6 @@
 import { promises as fs } from "node:fs";
 import { PDFDocument } from "pdf-lib";
+import { contentTypeForFileName } from "@/lib/files/contentType";
 import { writeWorkspaceFile } from "@/lib/files/tempStorage";
 import { TotalSizeTooLargeError, UnreadableFileError } from "@/lib/processing/errors";
 import type { ProcessingContext, ProcessingResult } from "@/lib/processing/types";
@@ -40,5 +41,6 @@ export async function mergePdf(context: ProcessingContext): Promise<ProcessingRe
   const mergedBytes = await mergedDoc.save();
   const outputPath = await writeWorkspaceFile(context.workspaceDir, ".pdf", Buffer.from(mergedBytes));
 
-  return { outputs: [{ path: outputPath, fileName: "merged.pdf" }] };
+  const fileName = "merged.pdf";
+  return { outputs: [{ path: outputPath, fileName, contentType: contentTypeForFileName(fileName) }] };
 }

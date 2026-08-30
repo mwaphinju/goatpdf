@@ -48,14 +48,16 @@ describe("runProcessingJobWithConfig — valid files", () => {
     let receivedPath = "";
     const config = makeConfig(async (ctx) => {
       receivedPath = ctx.files[0].path;
-      return { outputs: [{ path: ctx.files[0].path, fileName: "result.pdf" }] };
+      return { outputs: [{ path: ctx.files[0].path, fileName: "result.pdf", contentType: "application/pdf" }] };
     });
 
     const result = await runProcessingJobWithConfig("test-tool", config, [pdfInput()]);
 
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.outputs).toEqual([{ path: receivedPath, fileName: "result.pdf" }]);
+      expect(result.outputs).toEqual([
+        { path: receivedPath, fileName: "result.pdf", contentType: "application/pdf" },
+      ]);
       const stats = await fs.stat(receivedPath);
       expect(stats.isFile()).toBe(true);
     }
@@ -184,8 +186,10 @@ describe("runProcessingJobWithConfig — processing errors", () => {
   });
 
   it("reports NOT_IMPLEMENTED for every tool that's still a placeholder", async () => {
-    // merge-pdf has a real implementation as of Phase 3 — covered by tests/unit/pdf/mergePdf.test.ts instead.
-    const placeholderToolIds = TOOL_IDS.filter((id) => id !== "merge-pdf");
+    // merge-pdf (Phase 3) and split-pdf (Phase 4) have real implementations now —
+    // covered by tests/unit/pdf/mergePdf.test.ts and tests/unit/pdf/splitPdf.test.ts instead.
+    const implementedToolIds = new Set(["merge-pdf", "split-pdf"]);
+    const placeholderToolIds = TOOL_IDS.filter((id) => !implementedToolIds.has(id));
 
     for (const toolId of placeholderToolIds) {
       const config = TOOL_CONFIGS[toolId];

@@ -77,7 +77,7 @@ GOATPDF/
       layout.tsx
       page.tsx                      # homepage — 8 tool cards
       tools/
-        compress-pdf/page.tsx
+        compress-pdf/page.tsx         # real tool — CompressPdfTool
         merge-pdf/page.tsx           # real tool — MergePdfTool, not the shared placeholder shell
         split-pdf/page.tsx           # real tool — SplitPdfTool
         rotate-pdf/page.tsx          # real tool — RotatePdfTool
@@ -86,12 +86,12 @@ GOATPDF/
         pdf-to-jpg/page.tsx
         pdf-to-word/page.tsx
       api/
+        compress-pdf/route.ts        # POST — parses a preset form field
         merge-pdf/route.ts           # POST
         split-pdf/route.ts           # POST — parses mode/ranges form fields alongside the file
         rotate-pdf/route.ts          # POST — parses angle/pages form fields
         delete-pdf-pages/route.ts    # POST — parses pages form field
         download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download, content-type aware (pdf or zip)
-        compress/route.ts            # not yet added
         jpg-to-pdf/route.ts          # not yet added
         pdf-to-jpg/route.ts          # not yet added
         pdf-to-word/route.ts         # not yet added
@@ -102,11 +102,12 @@ GOATPDF/
       ui/                           # Button.tsx, UploadZone.tsx, ErrorMessage.tsx, ProcessingState.tsx, ResultDownload.tsx
       tools/
         ToolPageLayout.tsx           # shared heading/description wrapper, used by all 8 tool pages
-        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 4 unimplemented tools
+        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 3 unimplemented tools
         MergePdfTool.tsx             # merge-pdf's real, dedicated UI: add/remove/reorder files, real upload, processing/success/error states
         SplitPdfTool.tsx             # split-pdf's real, dedicated UI: client-side page count, all-pages/ranges mode, live range validation
         RotatePdfTool.tsx            # rotate-pdf's real, dedicated UI: angle picker, all-pages/selected-pages scope
         DeletePagesTool.tsx          # delete-pdf-pages's real, dedicated UI: page picker, blocks deleting every page
+        CompressPdfTool.tsx          # compress-pdf's real, dedicated UI: preset picker, measured original/compressed/saved/reduction stats
         PageSelector.tsx             # shared page-picker grid (select all/none/invert) — used by Rotate and Delete
       ToolCard.tsx
       icons.tsx                     # hand-written inline SVG icons — no icon library dependency
@@ -123,7 +124,7 @@ GOATPDF/
         contentType.ts                # extension → MIME type, for download response headers
       processing/
         types.ts                     # ToolId, ToolConfig, ToolProcessor, ProcessingContext (carries tool-specific `options`)/-Result
-        toolConfigs.ts                # the 8 tools' validation rules — merge/split/rotate/delete-pdf-pages point at real processors, the other 4 still throw NOT_IMPLEMENTED
+        toolConfigs.ts                # the 8 tools' validation rules — merge/split/rotate/delete-pdf-pages/compress point at real processors, the other 3 still throw NOT_IMPLEMENTED
         runProcessingJob.ts           # shared orchestrator: validate → stage → run processor w/ timeout → cleanup on failure
         jobRegistry.ts                # in-memory jobId → output-file map backing the single-use download route
         apiHelpers.ts                 # shared route plumbing: extractFilesFromFormData(), buildJobResponse(), HTTP status mapping
@@ -137,6 +138,7 @@ GOATPDF/
         pageRanges.ts                 # parsePageRanges() — pure, shared by client (instant feedback) and server (authoritative check)
         rotatePdf.ts                  # real pdf-lib rotate implementation — 90/180/270°, all pages or a selected subset (additive, not absolute, rotation)
         deletePages.ts                # real pdf-lib delete implementation — refuses to delete every page
+        compressPdf.ts                # real pdf-lib + sharp compression — see "Compress PDF design notes" below
     types/
   instrumentation.ts                # Next.js server-startup hook — starts the cleanup scheduler
   tests/
@@ -144,9 +146,19 @@ GOATPDF/
       format.test.ts
       files/                        # validate, tempStorage (incl. traversal-protection tests), cleanup
       processing/                   # runProcessingJob.test.ts — valid/invalid/oversized/timeout/error/no-content-logging
-      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages — page order, corrupted-file handling, range/selection validation, combined-size limit
+      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages, compressPdf — page order, corrupted-file handling, range/selection validation, combined-size limit, measured-reduction assertions
     e2e/                            # Playwright — homepage, navigation, tool-pages, and a full user-flow spec per implemented tool; fixtures/
 ```
+
+### Compress PDF design notes
+
+Real, general-purpose PDF compression (arbitrary raw bitmaps, CMYK, JPEG2000, CCITT fax, indexed color, transparency) is a large, correctness-sensitive engineering surface. `compressPdf.ts` deliberately scopes down to what can be done *safely*:
+
+- Only re-encodes embedded **JPEG (DCTDecode) images in DeviceRGB or DeviceGray**, without a soft mask (`/SMask`) — the overwhelming majority of real-world photos and scans. Everything else (CMYK JPEGs, PNG/Flate raw bitmaps, indexed color, JPX, CCITT) is left completely untouched rather than risk producing a corrupted or wrong-looking PDF.
+- Each matching image is resized (capped at the preset's max dimension, never upscaled) and re-encoded via `sharp` at the preset's JPEG quality, then swapped into the PDF's own object graph in place (`PDFRawStream.of(dict, newBytes)` + `context.assign(ref, ...)`), with `/Width`/`/Height` updated to match.
+- **Never returns a file larger than the upload.** After attempting recompression, the candidate output's size is compared to the original; if it isn't smaller, the original bytes are served back unchanged. This is what makes "no fixed percentage, graceful when it doesn't help" concrete: reduction is always accurately measured and reported, and the worst case is 0%, never negative.
+- Three presets (`recommended` / `high-quality` / `maximum-compression`) map to JPEG quality + max-dimension pairs — see `PRESETS` in `compressPdf.ts` for exact values.
+- A text-only or already-well-compressed PDF may see little or no reduction — this is expected, tested for explicitly (`tests/unit/pdf/compressPdf.test.ts`), and surfaced honestly in the UI rather than papered over.
 
 Each tool's UI page and its `lib/pdf/*` function should be independently understandable — a future contributor should be able to read one tool's code without needing to understand the other seven.
 
@@ -260,7 +272,7 @@ Work proceeds in this order. Do not skip ahead or batch phases.
   - **Delete PDF Pages** (slug `delete-pdf-pages`): real pdf-lib implementation ([deletePages.ts](src/lib/pdf/deletePages.ts)) using the same PageSelector; refuses to delete every page, both in the UI (live warning, disabled button) and server-side.
   - All four: client-side page count with no upload needed (shared [usePdfPageCount](src/lib/hooks/usePdfPageCount.ts) hook), unit tests, and full Playwright coverage of their user flows.
 - **Phase 3 — Image tools**: JPG to PDF, PDF to JPG.
-- **Phase 4 — Compress PDF**: pdf-lib + sharp image re-encode/downsample pipeline.
+- **Phase 4 — Compress PDF** ✅ *done*: real pdf-lib + `sharp` implementation ([compressPdf.ts](src/lib/pdf/compressPdf.ts)) recompressing embedded JPEG images (see "Compress PDF design notes" above for the deliberate safety scope). Three presets (Recommended / High Quality / Maximum Compression); dedicated UI ([CompressPdfTool.tsx](src/components/tools/CompressPdfTool.tsx)) reports actually-measured original size, compressed size, space saved, and percentage reduction — never a claimed/fixed percentage — and gracefully falls back to the original file (0% reduction, no error) when recompression doesn't help. Unit tests cover text/image-heavy/scanned/small/large/already-compressed PDFs plus the CMYK/non-JPEG safety-scope boundaries; full Playwright coverage of the user flow across the same file categories.
 - **Phase 5 — PDF to Word**: LibreOffice headless integration, Dockerfile finalized with LibreOffice installed, conversion failure handling.
 - **Phase 6 — SEO & content**: per-tool metadata, sitemap, robots.txt, structured data, real explanatory copy per tool page, OG images.
 - **Phase 7 — Polish, performance, mobile QA**: cross-device responsiveness pass, Lighthouse/performance pass, accessibility pass, edge-case handling (corrupted/encrypted PDFs, oversized files).

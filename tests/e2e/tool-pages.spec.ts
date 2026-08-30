@@ -23,11 +23,11 @@ for (const tool of TOOLS) {
 }
 
 test("selecting a file enables the action button and shows the coming-soon notice", async ({ page }) => {
-  // compress-pdf is still an unimplemented placeholder (uses the generic ToolPageShell) —
-  // rotate-pdf, used here originally, has a real implementation as of Phase 5.
-  await page.goto("/tools/compress-pdf");
+  // pdf-to-jpg is still an unimplemented placeholder (uses the generic ToolPageShell) —
+  // rotate-pdf (Phase 5) and compress-pdf (Phase 6), used here previously, are both real now.
+  await page.goto("/tools/pdf-to-jpg");
 
-  const actionButton = page.getByRole("button", { name: "Compress PDF" });
+  const actionButton = page.getByRole("button", { name: "Convert to JPG" });
   await expect(actionButton).toBeDisabled();
 
   const filePath = path.join(__dirname, "fixtures", "sample.pdf");

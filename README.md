@@ -6,7 +6,7 @@ A free, fast, mobile-friendly PDF utility website. No accounts, no payments, no 
 
 ## Tools (MVP)
 
-1. Compress PDF — *coming soon*
+1. **Compress PDF — live**
 2. **Merge PDF — live**
 3. **Split PDF — live**
 4. **Rotate PDF — live**
@@ -17,7 +17,7 @@ A free, fast, mobile-friendly PDF utility website. No accounts, no payments, no 
 
 ## Status
 
-🚧 **Merge, Split, Rotate, and Delete Pages are fully working.** Merge: upload, add/remove/reorder files, merge, download, start over. Split: see the page count, split into individual pages (as a ZIP) or extract specific page ranges (e.g. `1-3, 5, 7-9`). Rotate: 90°/180°/270°, every page or a chosen subset. Delete Pages: pick pages from a grid and remove them (you can't delete every page). All four are backed by real pdf-lib processing, secure file validation, random-UUID temp storage with automatic cleanup, and single-use download links. The other 4 tools are still placeholder pages with a working upload zone but a "coming soon" notice instead of real processing. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
+🚧 **Compress, Merge, Split, Rotate, and Delete Pages are fully working.** Compress: pick Recommended / High Quality / Maximum Compression and see the actual original size, compressed size, space saved, and percentage reduction — never a claimed fixed percentage, and never a file larger than what you uploaded. Merge: upload, add/remove/reorder files, merge, download, start over. Split: see the page count, split into individual pages (as a ZIP) or extract specific page ranges (e.g. `1-3, 5, 7-9`). Rotate: 90°/180°/270°, every page or a chosen subset. Delete Pages: pick pages from a grid and remove them (you can't delete every page). All five are backed by real pdf-lib processing, secure file validation, random-UUID temp storage with automatic cleanup, and single-use download links. The other 3 tools are still placeholder pages with a working upload zone but a "coming soon" notice instead of real processing. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
 
 ## How it works
 

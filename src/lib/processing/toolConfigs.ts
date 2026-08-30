@@ -1,4 +1,5 @@
 import { MAX_FILE_SIZE_BYTES } from "@/lib/files/validate";
+import { compressPdf } from "@/lib/pdf/compressPdf";
 import { deletePages } from "@/lib/pdf/deletePages";
 import { mergePdf } from "@/lib/pdf/mergePdf";
 import { rotatePdf } from "@/lib/pdf/rotatePdf";
@@ -28,8 +29,9 @@ export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
     minFiles: 1,
     maxFiles: 1,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
-    timeoutMs: DEFAULT_PROCESSING_TIMEOUT_MS,
-    processor: notImplemented("compress-pdf"),
+    // Recompressing many embedded images can take longer than the pure page-manipulation tools.
+    timeoutMs: 90_000,
+    processor: compressPdf,
   },
   "merge-pdf": {
     id: "merge-pdf",

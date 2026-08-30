@@ -2,7 +2,8 @@ import { promises as fs } from "node:fs";
 import { PDFDocument } from "pdf-lib";
 import { contentTypeForFileName } from "@/lib/files/contentType";
 import { writeWorkspaceFile } from "@/lib/files/tempStorage";
-import { TotalSizeTooLargeError, UnreadableFileError } from "@/lib/processing/errors";
+import { loadPdfOrThrow } from "@/lib/pdf/loadPdf";
+import { TotalSizeTooLargeError } from "@/lib/processing/errors";
 import type { ProcessingContext, ProcessingResult } from "@/lib/processing/types";
 
 export const MAX_COMBINED_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB across all input files
@@ -25,16 +26,10 @@ export async function mergePdf(context: ProcessingContext): Promise<ProcessingRe
   const mergedDoc = await PDFDocument.create();
 
   for (const file of context.files) {
-    const bytes = await fs.readFile(file.path);
-
-    try {
-      const sourceDoc = await PDFDocument.load(bytes);
-      const copiedPages = await mergedDoc.copyPages(sourceDoc, sourceDoc.getPageIndices());
-      for (const page of copiedPages) {
-        mergedDoc.addPage(page);
-      }
-    } catch {
-      throw new UnreadableFileError(file.safeName);
+    const { doc: sourceDoc } = await loadPdfOrThrow(file.path, file.safeName);
+    const copiedPages = await mergedDoc.copyPages(sourceDoc, sourceDoc.getPageIndices());
+    for (const page of copiedPages) {
+      mergedDoc.addPage(page);
     }
   }
 

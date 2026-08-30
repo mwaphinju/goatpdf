@@ -1,5 +1,7 @@
 import { MAX_FILE_SIZE_BYTES } from "@/lib/files/validate";
+import { deletePages } from "@/lib/pdf/deletePages";
 import { mergePdf } from "@/lib/pdf/mergePdf";
+import { rotatePdf } from "@/lib/pdf/rotatePdf";
 import { splitPdf } from "@/lib/pdf/splitPdf";
 import { ToolNotImplementedError } from "@/lib/processing/errors";
 import { DEFAULT_PROCESSING_TIMEOUT_MS } from "@/lib/processing/timeout";
@@ -57,17 +59,17 @@ export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
     maxFiles: 1,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
     timeoutMs: DEFAULT_PROCESSING_TIMEOUT_MS,
-    processor: notImplemented("rotate-pdf"),
+    processor: rotatePdf,
   },
-  "delete-pages": {
-    id: "delete-pages",
+  "delete-pdf-pages": {
+    id: "delete-pdf-pages",
     label: "Delete PDF Pages",
     acceptedKinds: ["pdf"],
     minFiles: 1,
     maxFiles: 1,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
     timeoutMs: DEFAULT_PROCESSING_TIMEOUT_MS,
-    processor: notImplemented("delete-pages"),
+    processor: deletePages,
   },
   "jpg-to-pdf": {
     id: "jpg-to-pdf",

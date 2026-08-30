@@ -9,15 +9,15 @@ A free, fast, mobile-friendly PDF utility website. No accounts, no payments, no 
 1. Compress PDF — *coming soon*
 2. **Merge PDF — live**
 3. **Split PDF — live**
-4. Rotate PDF — *coming soon*
-5. Delete PDF Pages — *coming soon*
+4. **Rotate PDF — live**
+5. **Delete PDF Pages — live** (`/tools/delete-pdf-pages`)
 6. JPG to PDF — *coming soon*
 7. PDF to JPG — *coming soon*
 8. PDF to Word — *coming soon*
 
 ## Status
 
-🚧 **Merge PDF and Split PDF are fully working.** Merge: upload, add/remove/reorder files, merge, download, start over. Split: upload, see the page count, split into individual pages (as a ZIP) or extract specific page ranges (e.g. `1-3, 5, 7-9`), download, start over. Both are backed by real pdf-lib processing, secure file validation, random-UUID temp storage with automatic cleanup, and single-use download links. The other 6 tools are still placeholder pages with a working upload zone but a "coming soon" notice instead of real processing. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
+🚧 **Merge, Split, Rotate, and Delete Pages are fully working.** Merge: upload, add/remove/reorder files, merge, download, start over. Split: see the page count, split into individual pages (as a ZIP) or extract specific page ranges (e.g. `1-3, 5, 7-9`). Rotate: 90°/180°/270°, every page or a chosen subset. Delete Pages: pick pages from a grid and remove them (you can't delete every page). All four are backed by real pdf-lib processing, secure file validation, random-UUID temp storage with automatic cleanup, and single-use download links. The other 4 tools are still placeholder pages with a working upload zone but a "coming soon" notice instead of real processing. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
 
 ## How it works
 

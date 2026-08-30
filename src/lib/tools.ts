@@ -63,7 +63,7 @@ export const tools: ToolDefinition[] = [
     icon: RotateIcon,
   },
   {
-    slug: "delete-pages",
+    slug: "delete-pdf-pages",
     name: "Delete PDF Pages",
     shortName: "Delete Pages",
     description: "Remove unwanted pages from a PDF document.",

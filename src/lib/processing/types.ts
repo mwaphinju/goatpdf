@@ -5,7 +5,7 @@ export const TOOL_IDS = [
   "merge-pdf",
   "split-pdf",
   "rotate-pdf",
-  "delete-pages",
+  "delete-pdf-pages",
   "jpg-to-pdf",
   "pdf-to-jpg",
   "pdf-to-word",

@@ -6,7 +6,7 @@ const TOOLS = [
   { slug: "merge-pdf", name: "Merge PDF" },
   { slug: "split-pdf", name: "Split PDF" },
   { slug: "rotate-pdf", name: "Rotate PDF" },
-  { slug: "delete-pages", name: "Delete PDF Pages" },
+  { slug: "delete-pdf-pages", name: "Delete PDF Pages" },
   { slug: "jpg-to-pdf", name: "JPG to PDF" },
   { slug: "pdf-to-jpg", name: "PDF to JPG" },
   { slug: "pdf-to-word", name: "PDF to Word" },
@@ -23,9 +23,11 @@ for (const tool of TOOLS) {
 }
 
 test("selecting a file enables the action button and shows the coming-soon notice", async ({ page }) => {
-  await page.goto("/tools/rotate-pdf");
+  // compress-pdf is still an unimplemented placeholder (uses the generic ToolPageShell) —
+  // rotate-pdf, used here originally, has a real implementation as of Phase 5.
+  await page.goto("/tools/compress-pdf");
 
-  const actionButton = page.getByRole("button", { name: "Rotate PDF" });
+  const actionButton = page.getByRole("button", { name: "Compress PDF" });
   await expect(actionButton).toBeDisabled();
 
   const filePath = path.join(__dirname, "fixtures", "sample.pdf");

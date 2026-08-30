@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { ProcessingState } from "@/components/ui/ProcessingState";
 import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { formatBytes } from "@/lib/format";
+import { usePdfPageCount } from "@/lib/hooks/usePdfPageCount";
 import { parsePageRanges } from "@/lib/pdf/pageRanges";
 
 type Mode = "all-pages" | "ranges";
@@ -19,46 +20,12 @@ type FlowState =
 
 export function SplitPdfTool() {
   const [files, setFiles] = useState<File[]>([]);
-  const [pageCount, setPageCount] = useState<number | null>(null);
-  const [pageCountError, setPageCountError] = useState<string | null>(null);
-  const [isReadingFile, setIsReadingFile] = useState(false);
   const [mode, setMode] = useState<Mode>("all-pages");
   const [rangesInput, setRangesInput] = useState("");
   const [flow, setFlow] = useState<FlowState>({ status: "idle" });
 
   const file = files[0] ?? null;
-
-  useEffect(() => {
-    if (!file) return;
-
-    let cancelled = false;
-
-    (async () => {
-      setIsReadingFile(true);
-      setPageCount(null);
-      setPageCountError(null);
-
-      try {
-        const { PDFDocument } = await import("pdf-lib");
-        const bytes = await file.arrayBuffer();
-        const doc = await PDFDocument.load(bytes);
-        if (!cancelled) setPageCount(doc.getPageCount());
-      } catch {
-        if (!cancelled) {
-          setPageCountError(
-            "We couldn't read this PDF's page count — it may be corrupted or password protected.",
-          );
-        }
-      } finally {
-        if (!cancelled) setIsReadingFile(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-      setIsReadingFile(false);
-    };
-  }, [file]);
+  const { pageCount, error: pageCountError, isReading: isReadingFile } = usePdfPageCount(file);
 
   const rangesValidation =
     file && mode === "ranges" && pageCount !== null ? parsePageRanges(rangesInput, pageCount) : null;
@@ -71,8 +38,6 @@ export function SplitPdfTool() {
 
   function reset() {
     setFiles([]);
-    setPageCount(null);
-    setPageCountError(null);
     setMode("all-pages");
     setRangesInput("");
     setFlow({ status: "idle" });

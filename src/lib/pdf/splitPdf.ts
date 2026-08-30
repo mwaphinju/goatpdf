@@ -1,9 +1,9 @@
-import { promises as fs } from "node:fs";
 import JSZip from "jszip";
 import { PDFDocument } from "pdf-lib";
 import { contentTypeForFileName } from "@/lib/files/contentType";
 import { writeWorkspaceFile } from "@/lib/files/tempStorage";
-import { InvalidOptionsError, UnreadableFileError } from "@/lib/processing/errors";
+import { loadPdfOrThrow } from "@/lib/pdf/loadPdf";
+import { InvalidOptionsError } from "@/lib/processing/errors";
 import { parsePageRanges } from "@/lib/pdf/pageRanges";
 import type { ProcessingContext, ProcessingResult } from "@/lib/processing/types";
 
@@ -19,26 +19,13 @@ function isSplitPdfOptions(value: unknown): value is SplitPdfOptions {
   return false;
 }
 
-async function loadSourceDoc(filePath: string, safeName: string): Promise<{ doc: PDFDocument; pageCount: number }> {
-  const bytes = await fs.readFile(filePath);
-  try {
-    const doc = await PDFDocument.load(bytes);
-    // getPageCount() walks the page tree — a structurally broken PDF can load "successfully"
-    // but throw here, so this must stay inside the same try/catch as load().
-    const pageCount = doc.getPageCount();
-    return { doc, pageCount };
-  } catch {
-    throw new UnreadableFileError(safeName);
-  }
-}
-
 export async function splitPdf(context: ProcessingContext): Promise<ProcessingResult> {
   if (!isSplitPdfOptions(context.options)) {
     throw new InvalidOptionsError("Choose how you'd like to split this PDF before continuing.");
   }
 
   const file = context.files[0];
-  const { doc: sourceDoc, pageCount } = await loadSourceDoc(file.path, file.safeName);
+  const { doc: sourceDoc, pageCount } = await loadPdfOrThrow(file.path, file.safeName);
 
   if (context.options.mode === "all-pages") {
     const zip = new JSZip();

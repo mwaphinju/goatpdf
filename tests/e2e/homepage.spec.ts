@@ -5,7 +5,7 @@ const TOOLS = [
   { slug: "merge-pdf", name: "Merge PDF" },
   { slug: "split-pdf", name: "Split PDF" },
   { slug: "rotate-pdf", name: "Rotate PDF" },
-  { slug: "delete-pages", name: "Delete PDF Pages" },
+  { slug: "delete-pdf-pages", name: "Delete PDF Pages" },
   { slug: "jpg-to-pdf", name: "JPG to PDF" },
   { slug: "pdf-to-jpg", name: "PDF to JPG" },
   { slug: "pdf-to-word", name: "PDF to Word" },

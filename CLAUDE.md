@@ -80,18 +80,18 @@ GOATPDF/
         compress-pdf/page.tsx
         merge-pdf/page.tsx           # real tool — MergePdfTool, not the shared placeholder shell
         split-pdf/page.tsx           # real tool — SplitPdfTool
-        rotate-pdf/page.tsx
-        delete-pages/page.tsx
+        rotate-pdf/page.tsx          # real tool — RotatePdfTool
+        delete-pdf-pages/page.tsx    # real tool — DeletePagesTool (note: slug is "delete-pdf-pages", not "delete-pages")
         jpg-to-pdf/page.tsx
         pdf-to-jpg/page.tsx
         pdf-to-word/page.tsx
       api/
         merge-pdf/route.ts           # POST
         split-pdf/route.ts           # POST — parses mode/ranges form fields alongside the file
+        rotate-pdf/route.ts          # POST — parses angle/pages form fields
+        delete-pdf-pages/route.ts    # POST — parses pages form field
         download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download, content-type aware (pdf or zip)
         compress/route.ts            # not yet added
-        rotate/route.ts              # not yet added
-        delete-pages/route.ts        # not yet added
         jpg-to-pdf/route.ts          # not yet added
         pdf-to-jpg/route.ts          # not yet added
         pdf-to-word/route.ts         # not yet added
@@ -102,23 +102,28 @@ GOATPDF/
       ui/                           # Button.tsx, UploadZone.tsx, ErrorMessage.tsx, ProcessingState.tsx, ResultDownload.tsx
       tools/
         ToolPageLayout.tsx           # shared heading/description wrapper, used by all 8 tool pages
-        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 6 unimplemented tools
+        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 4 unimplemented tools
         MergePdfTool.tsx             # merge-pdf's real, dedicated UI: add/remove/reorder files, real upload, processing/success/error states
         SplitPdfTool.tsx             # split-pdf's real, dedicated UI: client-side page count, all-pages/ranges mode, live range validation
+        RotatePdfTool.tsx            # rotate-pdf's real, dedicated UI: angle picker, all-pages/selected-pages scope
+        DeletePagesTool.tsx          # delete-pdf-pages's real, dedicated UI: page picker, blocks deleting every page
+        PageSelector.tsx             # shared page-picker grid (select all/none/invert) — used by Rotate and Delete
       ToolCard.tsx
       icons.tsx                     # hand-written inline SVG icons — no icon library dependency
     lib/
       tools.ts                      # the 8-tool registry (slug, name, description, accept type, icon) — drives nav, homepage, footer, and routes
       cn.ts                         # tiny classname-join helper (no clsx/tailwind-merge dependency)
       format.ts                     # formatBytes — unit-tested
+      hooks/
+        usePdfPageCount.ts           # client-side page count via a dynamically-imported pdf-lib — shared by Split, Rotate, Delete
       files/
         validate.ts                  # size/extension/MIME/magic-byte validation, filename sanitization
         tempStorage.ts                # random-UUID job workspaces, traversal-guarded read/write/remove
         cleanup.ts                   # TTL sweep + startCleanupScheduler(), run from instrumentation.ts
         contentType.ts                # extension → MIME type, for download response headers
       processing/
-        types.ts                     # ToolId, ToolConfig, ToolProcessor, ProcessingContext (now carries tool-specific `options`)/-Result
-        toolConfigs.ts                # the 8 tools' validation rules — merge-pdf and split-pdf point at real processors, the other 6 still throw NOT_IMPLEMENTED
+        types.ts                     # ToolId, ToolConfig, ToolProcessor, ProcessingContext (carries tool-specific `options`)/-Result
+        toolConfigs.ts                # the 8 tools' validation rules — merge/split/rotate/delete-pdf-pages point at real processors, the other 4 still throw NOT_IMPLEMENTED
         runProcessingJob.ts           # shared orchestrator: validate → stage → run processor w/ timeout → cleanup on failure
         jobRegistry.ts                # in-memory jobId → output-file map backing the single-use download route
         apiHelpers.ts                 # shared route plumbing: extractFilesFromFormData(), buildJobResponse(), HTTP status mapping
@@ -126,9 +131,12 @@ GOATPDF/
         errors.ts                    # ProcessingJobError hierarchy — safe code+message, never raw internals
         logger.ts                    # logJobEvent() — structurally cannot accept file content, only {jobId, toolId, event, ...}
       pdf/
+        loadPdf.ts                   # loadPdfOrThrow() — the one safe way every tool loads a PDF; getPageCount() stays inside load()'s try/catch since pdf-lib can parse a broken PDF "successfully" and only throw once you touch its page tree
         mergePdf.ts                  # real pdf-lib merge implementation
         splitPdf.ts                  # real pdf-lib split implementation — all-pages (zipped) and page-range extraction modes
         pageRanges.ts                 # parsePageRanges() — pure, shared by client (instant feedback) and server (authoritative check)
+        rotatePdf.ts                  # real pdf-lib rotate implementation — 90/180/270°, all pages or a selected subset (additive, not absolute, rotation)
+        deletePages.ts                # real pdf-lib delete implementation — refuses to delete every page
     types/
   instrumentation.ts                # Next.js server-startup hook — starts the cleanup scheduler
   tests/
@@ -136,13 +144,15 @@ GOATPDF/
       format.test.ts
       files/                        # validate, tempStorage (incl. traversal-protection tests), cleanup
       processing/                   # runProcessingJob.test.ts — valid/invalid/oversized/timeout/error/no-content-logging
-      pdf/                          # mergePdf, splitPdf, pageRanges — page order, corrupted-file handling, range validation, combined-size limit
-    e2e/                            # Playwright — homepage, navigation, tool-pages, merge-pdf, split-pdf (full user flows), fixtures/
+      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages — page order, corrupted-file handling, range/selection validation, combined-size limit
+    e2e/                            # Playwright — homepage, navigation, tool-pages, and a full user-flow spec per implemented tool; fixtures/
 ```
 
 Each tool's UI page and its `lib/pdf/*` function should be independently understandable — a future contributor should be able to read one tool's code without needing to understand the other seven.
 
-**Current status:** Merge PDF and Split PDF are fully working — real upload, pdf-lib processing, single-use download, and full Playwright coverage of both user flows. The other 6 tools are still placeholders: their `toolConfigs.ts` processor throws `NOT_IMPLEMENTED` and their page still shows the shared "coming soon" `ToolPageShell`. `lib/pdf/*` (per-tool logic), `api/*/route.ts` (HTTP wiring via the shared `apiHelpers.ts`), and `ProcessingContext.options` (for tools needing parameters beyond the file itself, like split-pdf's mode/ranges) now exist as a proven, working pattern the remaining 6 tools can each follow. Not yet built: the Dockerfile, `sitemap.ts`/`robots.ts`, and rate limiting / security headers (planned for Phase 8).
+**Current status:** Merge PDF, Split PDF, Rotate PDF, and Delete PDF Pages are fully working — real upload, pdf-lib processing, single-use download, and full Playwright coverage of each user flow. The other 4 tools are still placeholders: their `toolConfigs.ts` processor throws `NOT_IMPLEMENTED` and their page still shows the shared "coming soon" `ToolPageShell`. `lib/pdf/*` (per-tool logic), `api/*/route.ts` (HTTP wiring via the shared `apiHelpers.ts`), `ProcessingContext.options` (for tools needing parameters beyond the file itself), `usePdfPageCount` (client-side page count with no upload needed), and `PageSelector` (a reusable page-picker grid) now exist as a proven, working pattern the remaining 4 tools can each follow. Not yet built: the Dockerfile, `sitemap.ts`/`robots.ts`, and rate limiting / security headers (planned for Phase 8).
+
+**Naming note:** Delete PDF Pages' slug is `delete-pdf-pages` (not `delete-pages`, its original Phase 0/1 name) — renamed in Phase 5 to match the route the user specified. If you're looking for old references to `delete-pages`, they've all been updated.
 
 ---
 
@@ -243,10 +253,12 @@ Work proceeds in this order. Do not skip ahead or batch phases.
 
 - **Phase 0 — Project setup & foundations** ✅ *done*: Next.js + TypeScript + Tailwind scaffold, ESLint wired up, homepage shell, responsive header/footer/nav, placeholder pages for all 8 tools.
 - **Phase 1 — Core file pipeline** ✅ *done*: reusable Button, UploadZone, ErrorMessage, ProcessingState, ResultDownload components; server-side validation (size, extension, MIME, magic-byte sniffing), filename sanitization, temp workspaces under random UUIDs with traversal guards, TTL-based cleanup sweep wired to server startup via `instrumentation.ts`, a shared `runProcessingJob` orchestrator, and the `api/*` + `api/download/[id]` HTTP route handlers (single-use, in-memory-registry-backed downloads, content-type aware). **Not yet done:** the Dockerfile (needed before any real deploy) — everything else in this phase is complete and proven end-to-end by Merge PDF and Split PDF below.
-- **Phase 2 — Core pdf-lib tools**: split by tool.
-  - **Merge PDF** ✅ *done*: real pdf-lib implementation ([mergePdf.ts](src/lib/pdf/mergePdf.ts)), dedicated UI ([MergePdfTool.tsx](src/components/tools/MergePdfTool.tsx)) with add/remove/reorder (buttons + native drag-and-drop)/merge/download/start-over, corrupted-file and combined-size-limit handling, unit tests, and full Playwright coverage of the user flow.
-  - **Split PDF** ✅ *done*: real pdf-lib implementation ([splitPdf.ts](src/lib/pdf/splitPdf.ts)) with two modes — split into individual pages (zipped via `jszip`) or extract specific page ranges — plus a shared, doubly-used range parser ([pageRanges.ts](src/lib/pdf/pageRanges.ts)) for instant client-side feedback and authoritative server-side validation. Dedicated UI ([SplitPdfTool.tsx](src/components/tools/SplitPdfTool.tsx)) reads the page count client-side (no upload needed just to see it) via a dynamically-imported `pdf-lib`. Unit tests + full Playwright coverage of both modes and error paths.
-  - **Delete PDF Pages** ⬜ *not started* (Rotate PDF was originally scoped here too, but is still an unimplemented placeholder — move it here or to its own phase when it's picked up).
+- **Phase 2 — Core pdf-lib tools** ✅ *done* — all four:
+  - **Merge PDF**: real pdf-lib implementation ([mergePdf.ts](src/lib/pdf/mergePdf.ts)), dedicated UI ([MergePdfTool.tsx](src/components/tools/MergePdfTool.tsx)) with add/remove/reorder (buttons + native drag-and-drop)/merge/download/start-over, corrupted-file and combined-size-limit handling.
+  - **Split PDF**: real pdf-lib implementation ([splitPdf.ts](src/lib/pdf/splitPdf.ts)) with two modes — split into individual pages (zipped via `jszip`) or extract specific page ranges — plus a shared, doubly-used range parser ([pageRanges.ts](src/lib/pdf/pageRanges.ts)) for instant client-side feedback and authoritative server-side validation.
+  - **Rotate PDF**: real pdf-lib implementation ([rotatePdf.ts](src/lib/pdf/rotatePdf.ts)), 90°/180°/270° (additive — stacks with any existing rotation), all pages or a chosen subset via the shared [PageSelector](src/components/tools/PageSelector.tsx).
+  - **Delete PDF Pages** (slug `delete-pdf-pages`): real pdf-lib implementation ([deletePages.ts](src/lib/pdf/deletePages.ts)) using the same PageSelector; refuses to delete every page, both in the UI (live warning, disabled button) and server-side.
+  - All four: client-side page count with no upload needed (shared [usePdfPageCount](src/lib/hooks/usePdfPageCount.ts) hook), unit tests, and full Playwright coverage of their user flows.
 - **Phase 3 — Image tools**: JPG to PDF, PDF to JPG.
 - **Phase 4 — Compress PDF**: pdf-lib + sharp image re-encode/downsample pipeline.
 - **Phase 5 — PDF to Word**: LibreOffice headless integration, Dockerfile finalized with LibreOffice installed, conversion failure handling.

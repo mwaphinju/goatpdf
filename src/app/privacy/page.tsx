@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
+  path: "/privacy",
   title: "Privacy Policy",
   description: "How GOAT PDF handles your files: what's stored, for how long, and what's never collected.",
-};
+});
 
 export default function PrivacyPage() {
   return (

@@ -63,11 +63,22 @@ const nextConfig: NextConfig = {
   // node_modules instead of being bundled.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
   async headers() {
-    // Applied to every route (pages and API alike) — there is no cross-origin
-    // API consumer to accommodate, so the same locked-down policy is correct
-    // everywhere. No Access-Control-Allow-Origin is ever set, which keeps
-    // /api/* responses unreadable from any other origin (the CORS default).
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      // Applied to every route (pages and API alike) — there is no cross-origin
+      // API consumer to accommodate, so the same locked-down policy is correct
+      // everywhere. No Access-Control-Allow-Origin is ever set, which keeps
+      // /api/* responses unreadable from any other origin (the CORS default).
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // Belt-and-suspenders against indexing: robots.ts already disallows
+      // crawling /api/ (processing endpoints and single-use download links),
+      // but a URL discovered another way (linked externally, referrer leak)
+      // could otherwise still be indexed without ever being crawled. This
+      // header rules that out unconditionally.
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
   },
 };
 

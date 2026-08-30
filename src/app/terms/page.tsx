@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
+  path: "/terms",
   title: "Terms of Service",
   description: "The terms for using GOAT PDF's free PDF tools.",
-};
+});
 
 export default function TermsPage() {
   return (

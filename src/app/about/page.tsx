@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
+import { buildPageMetadata } from "@/lib/seo";
 import { tools } from "@/lib/tools";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
+  path: "/about",
   title: "About",
   description: "What GOAT PDF is, and why it's built the way it is.",
-};
+});
 
 export default function AboutPage() {
   return (

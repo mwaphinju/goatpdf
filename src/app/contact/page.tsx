@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout, LegalSection } from "@/components/legal/LegalPageLayout";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
+  path: "/contact",
   title: "Contact",
   description: "How to reach GOAT PDF with questions, feedback, or a bug report.",
-};
+});
 
 const CONTACT_EMAIL = "support@goatpdf.app";
 

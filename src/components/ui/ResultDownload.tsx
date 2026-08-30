@@ -1,0 +1,39 @@
+"use client";
+
+import { CheckCircleIcon, DownloadIcon } from "@/components/icons";
+import { Button } from "@/components/ui/Button";
+
+export interface ResultDownloadProps {
+  fileName: string;
+  fileSizeLabel?: string;
+  downloadUrl: string;
+  onReset?: () => void;
+}
+
+export function ResultDownload({ fileName, fileSizeLabel, downloadUrl, onReset }: ResultDownloadProps) {
+  return (
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-8 text-center">
+      <CheckCircleIcon className="h-9 w-9 text-emerald-600" />
+      <div>
+        <p className="font-medium text-slate-900">{fileName}</p>
+        {fileSizeLabel && <p className="text-sm text-slate-500">{fileSizeLabel}</p>}
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          variant="primary"
+          leftIcon={<DownloadIcon className="h-4 w-4" />}
+          onClick={() => {
+            window.location.href = downloadUrl;
+          }}
+        >
+          Download
+        </Button>
+        {onReset && (
+          <Button variant="secondary" onClick={onReset}>
+            Process another file
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}

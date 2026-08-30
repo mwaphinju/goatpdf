@@ -3,6 +3,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".zip": "application/zip",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".png": "image/png",
   ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 };
 

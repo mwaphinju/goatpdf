@@ -1,7 +1,9 @@
 import { MAX_FILE_SIZE_BYTES } from "@/lib/files/validate";
 import { compressPdf } from "@/lib/pdf/compressPdf";
 import { deletePages } from "@/lib/pdf/deletePages";
+import { jpgToPdf } from "@/lib/pdf/jpgToPdf";
 import { mergePdf } from "@/lib/pdf/mergePdf";
+import { pdfToJpg } from "@/lib/pdf/pdfToJpg";
 import { rotatePdf } from "@/lib/pdf/rotatePdf";
 import { splitPdf } from "@/lib/pdf/splitPdf";
 import { ToolNotImplementedError } from "@/lib/processing/errors";
@@ -76,12 +78,12 @@ export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
   "jpg-to-pdf": {
     id: "jpg-to-pdf",
     label: "JPG to PDF",
-    acceptedKinds: ["jpeg"],
+    acceptedKinds: ["jpeg", "png"],
     minFiles: 1,
     maxFiles: 30,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
     timeoutMs: DEFAULT_PROCESSING_TIMEOUT_MS,
-    processor: notImplemented("jpg-to-pdf"),
+    processor: jpgToPdf,
   },
   "pdf-to-jpg": {
     id: "pdf-to-jpg",
@@ -90,8 +92,9 @@ export const TOOL_CONFIGS: Record<ToolId, ToolConfig> = {
     minFiles: 1,
     maxFiles: 1,
     maxFileSizeBytes: MAX_FILE_SIZE_BYTES,
-    timeoutMs: DEFAULT_PROCESSING_TIMEOUT_MS,
-    processor: notImplemented("pdf-to-jpg"),
+    // Rasterizing pages can be slower than pure page-manipulation tools, especially at High quality.
+    timeoutMs: 90_000,
+    processor: pdfToJpg,
   },
   "pdf-to-word": {
     id: "pdf-to-word",

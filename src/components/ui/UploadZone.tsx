@@ -19,9 +19,11 @@ export interface UploadZoneProps {
 }
 
 function extensionsFromAccept(accept: string): string[] {
-  if (accept.includes("pdf")) return [".pdf"];
-  if (accept.includes("jpeg") || accept.includes("jpg")) return [".jpg", ".jpeg"];
-  return [];
+  const extensions: string[] = [];
+  if (accept.includes("pdf")) extensions.push(".pdf");
+  if (accept.includes("jpeg") || accept.includes("jpg")) extensions.push(".jpg", ".jpeg");
+  if (accept.includes("png")) extensions.push(".png");
+  return extensions;
 }
 
 export function UploadZone({

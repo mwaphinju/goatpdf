@@ -82,8 +82,8 @@ GOATPDF/
         split-pdf/page.tsx           # real tool — SplitPdfTool
         rotate-pdf/page.tsx          # real tool — RotatePdfTool
         delete-pdf-pages/page.tsx    # real tool — DeletePagesTool (note: slug is "delete-pdf-pages", not "delete-pages")
-        jpg-to-pdf/page.tsx
-        pdf-to-jpg/page.tsx
+        jpg-to-pdf/page.tsx          # real tool — JpgToPdfTool
+        pdf-to-jpg/page.tsx          # real tool — PdfToJpgTool
         pdf-to-word/page.tsx
       api/
         compress-pdf/route.ts        # POST — parses a preset form field
@@ -91,9 +91,9 @@ GOATPDF/
         split-pdf/route.ts           # POST — parses mode/ranges form fields alongside the file
         rotate-pdf/route.ts          # POST — parses angle/pages form fields
         delete-pdf-pages/route.ts    # POST — parses pages form field
-        download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download, content-type aware (pdf or zip)
-        jpg-to-pdf/route.ts          # not yet added
-        pdf-to-jpg/route.ts          # not yet added
+        jpg-to-pdf/route.ts          # POST — parses pageSize/orientation/margin form fields
+        pdf-to-jpg/route.ts          # POST — parses quality/pages form fields
+        download/[id]/route.ts       # GET — single-use, in-memory-registry-backed file download, content-type aware (pdf, zip, or jpeg)
         pdf-to-word/route.ts         # not yet added
       sitemap.ts                    # not yet added — Phase 6
       robots.ts                     # not yet added — Phase 6
@@ -102,13 +102,16 @@ GOATPDF/
       ui/                           # Button.tsx, UploadZone.tsx, ErrorMessage.tsx, ProcessingState.tsx, ResultDownload.tsx
       tools/
         ToolPageLayout.tsx           # shared heading/description wrapper, used by all 8 tool pages
-        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 3 unimplemented tools
+        ToolPageShell.tsx            # the generic "coming soon" shell — still used by the 1 unimplemented tool (PDF to Word)
         MergePdfTool.tsx             # merge-pdf's real, dedicated UI: add/remove/reorder files, real upload, processing/success/error states
         SplitPdfTool.tsx             # split-pdf's real, dedicated UI: client-side page count, all-pages/ranges mode, live range validation
         RotatePdfTool.tsx            # rotate-pdf's real, dedicated UI: angle picker, all-pages/selected-pages scope
         DeletePagesTool.tsx          # delete-pdf-pages's real, dedicated UI: page picker, blocks deleting every page
         CompressPdfTool.tsx          # compress-pdf's real, dedicated UI: preset picker, measured original/compressed/saved/reduction stats
-        PageSelector.tsx             # shared page-picker grid (select all/none/invert) — used by Rotate and Delete
+        JpgToPdfTool.tsx             # jpg-to-pdf's real, dedicated UI: reorderable multi-image upload, page size/orientation/margin
+        PdfToJpgTool.tsx             # pdf-to-jpg's real, dedicated UI: quality picker, all-pages/select-pages scope
+        PageSelector.tsx             # shared page-picker grid (select all/none/invert) — used by Rotate, Delete, and PDF to JPG
+        ReorderableFileList.tsx      # shared reorderable file list (move up/down + native drag) — used by Merge and JPG to PDF
       ToolCard.tsx
       icons.tsx                     # hand-written inline SVG icons — no icon library dependency
     lib/
@@ -116,15 +119,15 @@ GOATPDF/
       cn.ts                         # tiny classname-join helper (no clsx/tailwind-merge dependency)
       format.ts                     # formatBytes — unit-tested
       hooks/
-        usePdfPageCount.ts           # client-side page count via a dynamically-imported pdf-lib — shared by Split, Rotate, Delete
+        usePdfPageCount.ts           # client-side page count via a dynamically-imported pdf-lib — shared by Split, Rotate, Delete, PDF to JPG
       files/
-        validate.ts                  # size/extension/MIME/magic-byte validation, filename sanitization
+        validate.ts                  # size/extension/MIME/magic-byte validation (pdf, jpeg, png), filename sanitization
         tempStorage.ts                # random-UUID job workspaces, traversal-guarded read/write/remove
         cleanup.ts                   # TTL sweep + startCleanupScheduler(), run from instrumentation.ts
         contentType.ts                # extension → MIME type, for download response headers
       processing/
         types.ts                     # ToolId, ToolConfig, ToolProcessor, ProcessingContext (carries tool-specific `options`)/-Result
-        toolConfigs.ts                # the 8 tools' validation rules — merge/split/rotate/delete-pdf-pages/compress point at real processors, the other 3 still throw NOT_IMPLEMENTED
+        toolConfigs.ts                # the 8 tools' validation rules — 7 point at real processors, only pdf-to-word still throws NOT_IMPLEMENTED
         runProcessingJob.ts           # shared orchestrator: validate → stage → run processor w/ timeout → cleanup on failure
         jobRegistry.ts                # in-memory jobId → output-file map backing the single-use download route
         apiHelpers.ts                 # shared route plumbing: extractFilesFromFormData(), buildJobResponse(), HTTP status mapping
@@ -132,13 +135,17 @@ GOATPDF/
         errors.ts                    # ProcessingJobError hierarchy — safe code+message, never raw internals
         logger.ts                    # logJobEvent() — structurally cannot accept file content, only {jobId, toolId, event, ...}
       pdf/
-        loadPdf.ts                   # loadPdfOrThrow() — the one safe way every tool loads a PDF; getPageCount() stays inside load()'s try/catch since pdf-lib can parse a broken PDF "successfully" and only throw once you touch its page tree
+        loadPdf.ts                   # loadPdfOrThrow() — the one safe way every tool loads a PDF via pdf-lib; getPageCount() stays inside load()'s try/catch since pdf-lib can parse a broken PDF "successfully" and only throw once you touch its page tree
+        pdfRenderer.ts                # renderPdfPagesToJpeg() — rasterizes PDF pages via pdfjs-dist + @napi-rs/canvas; see "PDF rasterization design notes" below
         mergePdf.ts                  # real pdf-lib merge implementation
         splitPdf.ts                  # real pdf-lib split implementation — all-pages (zipped) and page-range extraction modes
-        pageRanges.ts                 # parsePageRanges() — pure, shared by client (instant feedback) and server (authoritative check)
+        pageRanges.ts                 # parsePageRanges() — pure, shared by client (instant feedback) and server (authoritative check) for text-range input
+        pageSelection.ts              # resolveSelectedPages() — server-only "all or explicit page numbers" resolver, shared by Rotate and PDF to JPG
         rotatePdf.ts                  # real pdf-lib rotate implementation — 90/180/270°, all pages or a selected subset (additive, not absolute, rotation)
         deletePages.ts                # real pdf-lib delete implementation — refuses to delete every page
         compressPdf.ts                # real pdf-lib + sharp compression — see "Compress PDF design notes" below
+        jpgToPdf.ts                   # real pdf-lib implementation — JPG/PNG in, one page per image, page size/orientation/margin
+        pdfToJpg.ts                   # real implementation on top of pdfRenderer.ts — single JPEG or zipped JPEGs depending on page count
     types/
   instrumentation.ts                # Next.js server-startup hook — starts the cleanup scheduler
   tests/
@@ -146,9 +153,19 @@ GOATPDF/
       format.test.ts
       files/                        # validate, tempStorage (incl. traversal-protection tests), cleanup
       processing/                   # runProcessingJob.test.ts — valid/invalid/oversized/timeout/error/no-content-logging
-      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages, compressPdf — page order, corrupted-file handling, range/selection validation, combined-size limit, measured-reduction assertions
+      pdf/                          # mergePdf, splitPdf, pageRanges, rotatePdf, deletePages, compressPdf, jpgToPdf, pdfToJpg — page order, corrupted-file handling, range/selection validation, combined-size limit, measured-reduction assertions, quality/resolution checks
     e2e/                            # Playwright — homepage, navigation, tool-pages, and a full user-flow spec per implemented tool; fixtures/
 ```
+
+### PDF rasterization design notes
+
+PDF to JPG needed real page rasterization — a fundamentally different capability from every other tool, since pdf-lib is a manipulation library only and cannot render pixels.
+
+- **`pdfjs-dist` (latest) + `@napi-rs/canvas`.** An older pdfjs-dist (≤4.1.392) was tried first and works, but `npm audit` flags it with a **high-severity arbitrary-JS-execution-on-malicious-PDF advisory** — disqualifying for a tool whose entire job is processing untrusted uploads. The latest version has that code path removed entirely. `@napi-rs/canvas`, not the unrelated `canvas` package, is required — pdfjs-dist's own bundled Node canvas factory (and its modern `render({ canvas })` API) expects it specifically.
+- Both packages are native/asset-heavy and can't be bundled into a Turbopack chunk — they're listed in `next.config.ts`'s `serverExternalPackages` so they're `require()`'d directly from `node_modules` at runtime instead.
+- pdfjs-dist's standard-font and CJK cmap data ship as plain files, not bundled into its JS — `standardFontDataUrl`/`cMapUrl` must be passed as plain forward-slashed filesystem paths (its Node fetcher does a bare `fs.readFile(url + filename)`, and it also rejects a Node `Buffer` outright even though `Buffer` is a `Uint8Array` subclass — `pdfRenderer.ts` normalizes both of these).
+- `pdfToJpg.ts` validates with `loadPdfOrThrow` (the same battle-tested pdf-lib check every other tool uses) before handing the file to the separate rendering pipeline, so corrupted-file handling stays consistent across all 8 tools rather than depending on pdfjs's own error behavior.
+- Output: a single JPEG file when exactly one page is requested, otherwise a ZIP of `page-N.jpg` files (mirrors Split PDF's all-pages-mode convention).
 
 ### Compress PDF design notes
 
@@ -271,7 +288,10 @@ Work proceeds in this order. Do not skip ahead or batch phases.
   - **Rotate PDF**: real pdf-lib implementation ([rotatePdf.ts](src/lib/pdf/rotatePdf.ts)), 90°/180°/270° (additive — stacks with any existing rotation), all pages or a chosen subset via the shared [PageSelector](src/components/tools/PageSelector.tsx).
   - **Delete PDF Pages** (slug `delete-pdf-pages`): real pdf-lib implementation ([deletePages.ts](src/lib/pdf/deletePages.ts)) using the same PageSelector; refuses to delete every page, both in the UI (live warning, disabled button) and server-side.
   - All four: client-side page count with no upload needed (shared [usePdfPageCount](src/lib/hooks/usePdfPageCount.ts) hook), unit tests, and full Playwright coverage of their user flows.
-- **Phase 3 — Image tools**: JPG to PDF, PDF to JPG.
+- **Phase 3 — Image tools** ✅ *done*: both.
+  - **JPG to PDF**: real pdf-lib implementation ([jpgToPdf.ts](src/lib/pdf/jpgToPdf.ts)) accepting JPG *or* PNG, multiple images, reorderable via the shared [ReorderableFileList](src/components/tools/ReorderableFileList.tsx), one page per image with a page-size (A4 / Letter / Fit-to-image) × orientation × margin layout.
+  - **PDF to JPG**: real rasterization on top of a new pdfjs-dist + `@napi-rs/canvas` pipeline (see "PDF rasterization design notes" above) — three quality presets, every page or a selection via the shared [PageSelector](src/components/tools/PageSelector.tsx), single JPEG or zipped JPEGs depending on page count.
+  - Both: unit tests (page count/order, page-size math, quality/resolution, corrupted-file handling) and full Playwright coverage of their user flows.
 - **Phase 4 — Compress PDF** ✅ *done*: real pdf-lib + `sharp` implementation ([compressPdf.ts](src/lib/pdf/compressPdf.ts)) recompressing embedded JPEG images (see "Compress PDF design notes" above for the deliberate safety scope). Three presets (Recommended / High Quality / Maximum Compression); dedicated UI ([CompressPdfTool.tsx](src/components/tools/CompressPdfTool.tsx)) reports actually-measured original size, compressed size, space saved, and percentage reduction — never a claimed/fixed percentage — and gracefully falls back to the original file (0% reduction, no error) when recompression doesn't help. Unit tests cover text/image-heavy/scanned/small/large/already-compressed PDFs plus the CMYK/non-JPEG safety-scope boundaries; full Playwright coverage of the user flow across the same file categories.
 - **Phase 5 — PDF to Word**: LibreOffice headless integration, Dockerfile finalized with LibreOffice installed, conversion failure handling.
 - **Phase 6 — SEO & content**: per-tool metadata, sitemap, robots.txt, structured data, real explanatory copy per tool page, OG images.

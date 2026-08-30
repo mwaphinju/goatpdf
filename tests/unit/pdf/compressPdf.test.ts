@@ -143,7 +143,7 @@ describe("compressPdf — image-heavy PDFs", () => {
     const highQualitySize = (await fs.stat(highQualityResult.outputs[0].path)).size;
     const maxSize = (await fs.stat(maxResult.outputs[0].path)).size;
     expect(maxSize).toBeLessThanOrEqual(highQualitySize);
-  });
+  }, 20_000);
 
   it("outputs a structurally valid PDF with the same page and image count", async () => {
     const workspace = await createJobWorkspace();

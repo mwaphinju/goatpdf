@@ -2,6 +2,7 @@ import { degrees } from "pdf-lib";
 import { contentTypeForFileName } from "@/lib/files/contentType";
 import { writeWorkspaceFile } from "@/lib/files/tempStorage";
 import { loadPdfOrThrow } from "@/lib/pdf/loadPdf";
+import { resolveSelectedPages } from "@/lib/pdf/pageSelection";
 import { InvalidOptionsError } from "@/lib/processing/errors";
 import type { ProcessingContext, ProcessingResult } from "@/lib/processing/types";
 
@@ -16,26 +17,6 @@ function isRotatePdfOptions(value: unknown): value is RotatePdfOptions {
   return Array.isArray(pages) && pages.every((page) => typeof page === "number");
 }
 
-function resolveTargetPages(pages: "all" | number[], pageCount: number): number[] {
-  if (pages === "all") {
-    return Array.from({ length: pageCount }, (_, index) => index + 1);
-  }
-
-  if (pages.length === 0) {
-    throw new InvalidOptionsError("Select at least one page to rotate.");
-  }
-
-  const uniquePages = Array.from(new Set(pages));
-  for (const pageNumber of uniquePages) {
-    if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pageCount) {
-      throw new InvalidOptionsError(
-        `Page ${pageNumber} doesn't exist — this PDF has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
-      );
-    }
-  }
-  return uniquePages;
-}
-
 export async function rotatePdf(context: ProcessingContext): Promise<ProcessingResult> {
   if (!isRotatePdfOptions(context.options)) {
     throw new InvalidOptionsError("Choose a rotation angle (90°, 180°, or 270°) before continuing.");
@@ -44,7 +25,11 @@ export async function rotatePdf(context: ProcessingContext): Promise<ProcessingR
   const file = context.files[0];
   const { doc, pageCount } = await loadPdfOrThrow(file.path, file.safeName);
 
-  const targetPages = resolveTargetPages(context.options.pages, pageCount);
+  const targetPages = resolveSelectedPages(
+    context.options.pages,
+    pageCount,
+    "Select at least one page to rotate.",
+  );
   const pages = doc.getPages();
 
   for (const pageNumber of targetPages) {

@@ -2,7 +2,7 @@ import path from "node:path";
 
 export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
-export type SupportedFileKind = "pdf" | "jpeg";
+export type SupportedFileKind = "pdf" | "jpeg" | "png";
 
 export type ValidationErrorCode =
   | "EMPTY_FILE"
@@ -45,6 +45,21 @@ const SIGNATURES: FileSignature[] = [
     mimeTypes: ["image/jpeg"],
     matchesMagicBytes: (buffer) =>
       buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff,
+  },
+  {
+    kind: "png",
+    extensions: [".png"],
+    mimeTypes: ["image/png"],
+    matchesMagicBytes: (buffer) =>
+      buffer.length >= 8 &&
+      buffer[0] === 0x89 &&
+      buffer[1] === 0x50 &&
+      buffer[2] === 0x4e &&
+      buffer[3] === 0x47 &&
+      buffer[4] === 0x0d &&
+      buffer[5] === 0x0a &&
+      buffer[6] === 0x1a &&
+      buffer[7] === 0x0a,
   },
 ];
 

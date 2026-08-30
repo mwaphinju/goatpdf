@@ -186,15 +186,17 @@ describe("runProcessingJobWithConfig — processing errors", () => {
   });
 
   it("reports NOT_IMPLEMENTED for every tool that's still a placeholder", async () => {
-    // merge-pdf (Phase 3), split-pdf (Phase 4), rotate-pdf/delete-pdf-pages (Phase 5), and
-    // compress-pdf (Phase 6) have real implementations now — covered by their own
-    // tests/unit/pdf/*.test.ts instead.
+    // merge-pdf (Phase 3), split-pdf (Phase 4), rotate-pdf/delete-pdf-pages (Phase 5),
+    // compress-pdf (Phase 6), and jpg-to-pdf/pdf-to-jpg (Phase 7) have real
+    // implementations now — covered by their own tests/unit/pdf/*.test.ts instead.
     const implementedToolIds = new Set([
       "merge-pdf",
       "split-pdf",
       "rotate-pdf",
       "delete-pdf-pages",
       "compress-pdf",
+      "jpg-to-pdf",
+      "pdf-to-jpg",
     ]);
     const placeholderToolIds = TOOL_IDS.filter((id) => !implementedToolIds.has(id));
 

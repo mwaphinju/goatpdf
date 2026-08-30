@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { ProcessingState } from "@/components/ui/ProcessingState";
 import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { PageSelector } from "@/components/tools/PageSelector";
+import { PdfPageCountStatus } from "@/components/tools/PdfPageCountStatus";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import { usePdfPageCount } from "@/lib/hooks/usePdfPageCount";
 import type { RotationAngle } from "@/lib/pdf/rotatePdf";
@@ -81,30 +83,8 @@ export function RotatePdfTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-
-    try {
-      const response = await fetch(flow.downloadUrl);
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        setFlow({
-          status: "error",
-          message: data?.message ?? "This download link has expired. Please rotate your file again.",
-        });
-        return;
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = flow.fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
-    } catch {
-      setFlow({ status: "error", message: "Network error while downloading. Please try again." });
-    }
+    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 
   if (flow.status === "success") {
@@ -135,15 +115,7 @@ export function RotatePdfTool() {
         hint="Up to 50 MB. Files are processed privately and deleted automatically."
       />
 
-      {file && isReadingFile && <p className="text-sm text-slate-500">Reading your PDF…</p>}
-
-      {file && pageCount !== null && (
-        <p className="text-sm text-slate-600">
-          This PDF has <span className="font-medium">{pageCount}</span> page{pageCount === 1 ? "" : "s"}.
-        </p>
-      )}
-
-      {file && pageCountError && <ErrorMessage tone="info" message={pageCountError} />}
+      <PdfPageCountStatus file={file} pageCount={pageCount} error={pageCountError} isReading={isReadingFile} />
 
       {file && (
         <>
@@ -215,16 +187,13 @@ export function RotatePdfTool() {
 
       {flow.status === "error" && <ErrorMessage message={flow.message} />}
 
-      <div className="flex flex-wrap gap-3">
-        <Button size="lg" disabled={!canRotate} onClick={handleRotate}>
-          Rotate PDF
-        </Button>
-        {file && (
-          <Button size="lg" variant="secondary" onClick={reset}>
-            Start over
-          </Button>
-        )}
-      </div>
+      <ToolActionBar
+        actionLabel="Rotate PDF"
+        onAction={handleRotate}
+        disabled={!canRotate}
+        showReset={file !== null}
+        onReset={reset}
+      />
     </div>
   );
 }

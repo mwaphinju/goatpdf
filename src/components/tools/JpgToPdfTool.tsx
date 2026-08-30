@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { ErrorMessage } from "@/components/ui/ErrorMessage";
 import { ProcessingState } from "@/components/ui/ProcessingState";
 import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { ReorderableFileList } from "@/components/tools/ReorderableFileList";
+import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import type { Margin, Orientation, PageSize } from "@/lib/pdf/jpgToPdf";
 
@@ -83,30 +84,8 @@ export function JpgToPdfTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-
-    try {
-      const response = await fetch(flow.downloadUrl);
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        setFlow({
-          status: "error",
-          message: data?.message ?? "This download link has expired. Please try again.",
-        });
-        return;
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = objectUrl;
-      link.download = flow.fileName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
-    } catch {
-      setFlow({ status: "error", message: "Network error while downloading. Please try again." });
-    }
+    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 
   if (flow.status === "success") {
@@ -212,16 +191,13 @@ export function JpgToPdfTool() {
 
       {flow.status === "error" && <ErrorMessage message={flow.message} />}
 
-      <div className="flex flex-wrap gap-3">
-        <Button size="lg" disabled={files.length === 0} onClick={handleConvert}>
-          Convert to PDF
-        </Button>
-        {files.length > 0 && (
-          <Button size="lg" variant="secondary" onClick={reset}>
-            Start over
-          </Button>
-        )}
-      </div>
+      <ToolActionBar
+        actionLabel="Convert to PDF"
+        onAction={handleConvert}
+        disabled={files.length === 0}
+        showReset={files.length > 0}
+        onReset={reset}
+      />
     </div>
   );
 }

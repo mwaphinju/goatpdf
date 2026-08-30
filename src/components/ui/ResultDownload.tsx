@@ -20,7 +20,11 @@ export function ResultDownload({
   onDownload,
 }: ResultDownloadProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-8 text-center">
+    <div
+      role="status"
+      aria-live="polite"
+      className="flex flex-col items-center gap-4 rounded-lg border border-emerald-200 bg-emerald-50 p-8 text-center"
+    >
       <CheckCircleIcon className="h-9 w-9 text-emerald-600" />
       <div>
         <p className="font-medium text-slate-900">{fileName}</p>

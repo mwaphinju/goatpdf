@@ -107,3 +107,15 @@ export const tools: ToolDefinition[] = [
 export function getToolBySlug(slug: string): ToolDefinition | undefined {
   return tools.find((tool) => tool.slug === slug);
 }
+
+/** Other tools to surface at the bottom of a tool page, in a stable order starting right after the current one. */
+export function getRelatedTools(slug: string, count = 3): ToolDefinition[] {
+  const currentIndex = tools.findIndex((tool) => tool.slug === slug);
+  if (currentIndex === -1) return [];
+
+  const related: ToolDefinition[] = [];
+  for (let offset = 1; offset < tools.length && related.length < count; offset++) {
+    related.push(tools[(currentIndex + offset) % tools.length]);
+  }
+  return related;
+}

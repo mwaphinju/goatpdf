@@ -101,7 +101,10 @@ GOATPDF/
       layout/                       # Header.tsx, Footer.tsx
       ui/                           # Button.tsx, UploadZone.tsx, ErrorMessage.tsx, ProcessingState.tsx, ResultDownload.tsx
       tools/
-        ToolPageLayout.tsx           # shared heading/description wrapper, used by all 8 tool pages
+        ToolPageLayout.tsx           # shared heading/description wrapper + RelatedTools, used by all 8 tool pages
+        RelatedTools.tsx             # "Related tools" section (next 3 tools, via getRelatedTools() in lib/tools.ts)
+        PdfPageCountStatus.tsx       # shared "Reading your PDF… / N pages / couldn't read it" block — used by Split, Rotate, Delete, PDF to JPG
+        ToolActionBar.tsx            # shared primary-action + "Start over" button row — used by all 8 tools
         MergePdfTool.tsx             # merge-pdf's real, dedicated UI: add/remove/reorder files, real upload, processing/success/error states
         SplitPdfTool.tsx             # split-pdf's real, dedicated UI: client-side page count, all-pages/ranges mode, live range validation
         RotatePdfTool.tsx            # rotate-pdf's real, dedicated UI: angle picker, all-pages/selected-pages scope
@@ -115,9 +118,10 @@ GOATPDF/
       ToolCard.tsx
       icons.tsx                     # hand-written inline SVG icons — no icon library dependency
     lib/
-      tools.ts                      # the 8-tool registry (slug, name, description, accept type, icon) — drives nav, homepage, footer, and routes
+      tools.ts                      # the 8-tool registry (slug, name, description, accept type, icon) — drives nav, homepage, footer, and routes; also getRelatedTools()
       cn.ts                         # tiny classname-join helper (no clsx/tailwind-merge dependency)
       format.ts                     # formatBytes — unit-tested
+      downloadFile.ts               # shared blob-fetch download helper — used by all 8 tools' success state
       hooks/
         usePdfPageCount.ts           # client-side page count via a dynamically-imported pdf-lib — shared by Split, Rotate, Delete, PDF to JPG
       files/
@@ -313,8 +317,9 @@ Work proceeds in this order. Do not skip ahead or batch phases.
 
 **🎉 All 8 MVP tools are now fully implemented, unit-tested, and covered by Playwright end-to-end flows.** What remains before launch is entirely infrastructure/polish, not tool functionality:
 
+- **Phase 5.5 — UX consistency pass** ✅ *done*: every tool page now follows the same shape via shared components — [ToolPageLayout.tsx](src/components/tools/ToolPageLayout.tsx) (title/icon/description), [PdfPageCountStatus.tsx](src/components/tools/PdfPageCountStatus.tsx) (the "Reading your PDF… / N pages / couldn't read it" block, previously duplicated across Split/Rotate/Delete/PdfToJpg), [ToolActionBar.tsx](src/components/tools/ToolActionBar.tsx) (the primary-action + Start-over row, previously duplicated across all 8 tools), and [downloadFile.ts](src/lib/downloadFile.ts) (the blob-fetch download helper, previously duplicated with inconsistent error-fallback wording per tool). Added a "Related tools" section ([RelatedTools.tsx](src/components/tools/RelatedTools.tsx) + `getRelatedTools()` in [tools.ts](src/lib/tools.ts)) to every tool page. Accessibility fixes: focus-visible ring on UploadZone's dropzone and the small icon buttons in UploadZone/ReorderableFileList (also enlarged their touch targets), `motion-reduce:animate-none` on the processing spinner, `role="status"`/`aria-live="polite"` on the success state so screen readers announce completion. No functional/behavioral changes — verified by the full existing unit + Playwright suite passing unchanged (132 unit tests, 118 e2e tests).
 - **Phase 6 — SEO & content**: per-tool metadata, sitemap, robots.txt, structured data, real explanatory copy per tool page, OG images.
-- **Phase 7 — Polish, performance, mobile QA**: cross-device responsiveness pass, Lighthouse/performance pass, accessibility pass, edge-case handling (corrupted/encrypted PDFs, oversized files).
+- **Phase 7 — Polish, performance, mobile QA**: Lighthouse/performance pass, edge-case handling (corrupted/encrypted PDFs, oversized files). *(Cross-device responsiveness and the accessibility pass are substantially covered by Phase 5.5 above.)*
 - **Phase 8 — Security hardening & pre-launch**: rate limiting, security headers, dependency audit, cleanup mechanism stress test, full E2E pass across all 8 tools, **write the Dockerfile (with LibreOffice installed)**, deploy to the Docker PaaS, production smoke test.
 
 AdSense integration is explicitly **out of scope** for all of the above phases and will be scoped separately after MVP launch.

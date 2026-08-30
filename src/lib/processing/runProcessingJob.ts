@@ -1,4 +1,5 @@
 import path from "node:path";
+import { trackEvent } from "@/lib/analytics/track";
 import { createJobWorkspace, removeWorkspace, writeWorkspaceFile } from "@/lib/files/tempStorage";
 import { validateFile, type ValidationFailure } from "@/lib/files/validate";
 import { ProcessingJobError } from "@/lib/processing/errors";
@@ -55,6 +56,7 @@ export async function runProcessingJobWithConfig(
   options?: unknown,
 ): Promise<JobResult> {
   if (files.length < config.minFiles) {
+    void trackEvent({ name: "processing_failed", tool: toolId });
     return {
       ok: false,
       code: "TOO_FEW_FILES",
@@ -63,6 +65,7 @@ export async function runProcessingJobWithConfig(
   }
 
   if (files.length > config.maxFiles) {
+    void trackEvent({ name: "processing_failed", tool: toolId });
     return {
       ok: false,
       code: "TOO_MANY_FILES",
@@ -78,12 +81,14 @@ export async function runProcessingJobWithConfig(
   });
 
   if (failures.length > 0) {
+    void trackEvent({ name: "processing_failed", tool: toolId });
     return { ok: false, code: "VALIDATION_FAILED", message: failures[0].message };
   }
 
   const workspace = await createJobWorkspace();
   const startedAt = Date.now();
   logJobEvent({ jobId: workspace.id, toolId, event: "job_started" });
+  void trackEvent({ name: "processing_started", tool: toolId });
 
   try {
     const inputFiles: ProcessingInputFile[] = await Promise.all(
@@ -107,6 +112,7 @@ export async function runProcessingJobWithConfig(
       event: "job_succeeded",
       durationMs: Date.now() - startedAt,
     });
+    void trackEvent({ name: "processing_completed", tool: toolId });
 
     return { ok: true, jobId: workspace.id, workspaceDir: workspace.dir, outputs: result.outputs };
   } catch (error) {
@@ -120,6 +126,7 @@ export async function runProcessingJobWithConfig(
       errorCode: code,
       durationMs: Date.now() - startedAt,
     });
+    void trackEvent({ name: "processing_failed", tool: toolId });
 
     await removeWorkspace(workspace.dir).catch(() => {
       // Best-effort cleanup; the periodic sweep is the backstop if this fails.

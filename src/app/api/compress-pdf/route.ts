@@ -38,5 +38,5 @@ export async function POST(request: Request) {
 
   const options: CompressPdfOptions = { preset };
   const result = await runProcessingJob("compress-pdf", files, options);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "compress-pdf");
 }

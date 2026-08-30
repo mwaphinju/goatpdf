@@ -24,5 +24,5 @@ export async function POST(request: Request) {
 
   const files = await extractFilesFromFormData(formData);
   const result = await runProcessingJob("pdf-to-word", files);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "pdf-to-word");
 }

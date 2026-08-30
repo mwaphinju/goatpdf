@@ -42,5 +42,5 @@ export async function POST(request: Request) {
 
   const options: JpgToPdfOptions = { pageSize, orientation, margin };
   const result = await runProcessingJob("jpg-to-pdf", files, options);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "jpg-to-pdf");
 }

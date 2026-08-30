@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AnalyticsPageView } from "@/components/analytics/AnalyticsPageView";
 import { JsonLd } from "@/components/JsonLd";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="flex min-h-full flex-col bg-white text-slate-900">
         <JsonLd data={websiteStructuredData()} />
+        <AnalyticsPageView />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

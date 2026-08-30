@@ -53,7 +53,6 @@ export default function PrivacyPage() {
         <ul className="flex list-disc flex-col gap-2 pl-5">
           <li>No user accounts, no login, no persistent profile.</li>
           <li>No cookies and no browser storage used to identify or track you.</li>
-          <li>No analytics or tracking scripts of any kind, currently.</li>
           <li>No advertising, currently.</li>
           <li>No sharing of file contents with any third party.</li>
           <li>No OCR, no AI features, and files are never used to train a model.</li>
@@ -61,6 +60,38 @@ export default function PrivacyPage() {
         <p>
           If that ever changes — for example, if we add advertising in the future — this policy will be
           updated first, and it will continue to describe accurately what is and isn&apos;t collected.
+        </p>
+      </LegalSection>
+
+      <LegalSection heading="Analytics">
+        <p>
+          GOAT PDF can optionally record a small set of usage events — the operator running this site
+          turns this on or off with a server setting, and it is <strong>off by default</strong>. When it&apos;s
+          off, none of this section applies: nothing is measured, logged, or sent anywhere.
+        </p>
+        <p>When analytics is turned on, the only events recorded are:</p>
+        <ul className="flex list-disc flex-col gap-2 pl-5">
+          <li>a page was viewed, and which page</li>
+          <li>a tool&apos;s page was viewed, and which tool</li>
+          <li>a file was added to a tool, and which tool (never the filename)</li>
+          <li>processing started, completed, or failed, and which tool</li>
+          <li>a result was downloaded, and which tool</li>
+        </ul>
+        <p>
+          That&apos;s the complete list. Every event is just a name, an optional tool name, and an optional
+          page path — never a filename, never file contents, never anything read from inside your PDF or
+          images. There is no cookie and no persistent identifier of any kind attached to these events, and
+          nothing links two events together as coming from &quot;the same person.&quot;
+        </p>
+        <p>
+          These events never go straight from your browser to a third party. A page/tool view or a file
+          add is first sent to GOAT PDF&apos;s own server; the server then decides, based on its own
+          configuration, whether to also forward that event to an analytics collector the operator has set
+          up themselves (for example, a self-hosted, privacy-focused analytics tool) — or to just record it
+          in the server&apos;s own logs and go no further. If forwarding is configured, your IP address is
+          passed along with that one request only, so the receiving analytics tool can count unique
+          visitors the same privacy-conscious way it would if it were embedded directly in the page — it is
+          not stored by GOAT PDF itself, logged, or linked to any file.
         </p>
       </LegalSection>
 

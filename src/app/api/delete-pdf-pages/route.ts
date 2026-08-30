@@ -38,5 +38,5 @@ export async function POST(request: Request) {
 
   const options: DeletePagesOptions = { pages };
   const result = await runProcessingJob("delete-pdf-pages", files, options);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "delete-pdf-pages");
 }

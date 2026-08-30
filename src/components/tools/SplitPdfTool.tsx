@@ -106,6 +106,7 @@ export function SplitPdfTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="application/pdf"
+        toolSlug="split-pdf"
         multiple={false}
         maxSizeMB={50}
         files={files}

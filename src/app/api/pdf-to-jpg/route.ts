@@ -48,5 +48,5 @@ export async function POST(request: Request) {
 
   const options: PdfToJpgOptions = { quality, pages };
   const result = await runProcessingJob("pdf-to-jpg", files, options);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "pdf-to-jpg");
 }

@@ -3,6 +3,8 @@ export interface RegisteredJobOutput {
   fileName: string;
   contentType: string;
   workspaceDir: string;
+  /** Which tool produced this output — reported as the `tool` parameter on the download_completed analytics event. */
+  toolId: string;
 }
 
 /**

@@ -107,6 +107,7 @@ export function RotatePdfTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="application/pdf"
+        toolSlug="rotate-pdf"
         multiple={false}
         maxSizeMB={50}
         files={files}

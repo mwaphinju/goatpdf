@@ -1,3 +1,5 @@
+import { clientIpFromRequest } from "@/lib/security/clientIp";
+
 export interface RateLimitResult {
   ok: boolean;
   retryAfterSeconds: number;
@@ -20,17 +22,10 @@ const buckets = new Map<string, Bucket>();
 export const DEFAULT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
 function clientKeyFromRequest(request: Request): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    const first = forwardedFor.split(",")[0]?.trim();
-    if (first) return first;
-  }
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) return realIp;
   // No proxy header present (e.g. direct connection) — every such client
   // shares one bucket, which is intentionally conservative behind a PaaS
   // deployment where x-forwarded-for is expected to always be set.
-  return "unknown";
+  return clientIpFromRequest(request) ?? "unknown";
 }
 
 /** Checks and records one request against a named scope's per-IP limit (e.g. "process" for the 8 upload endpoints, "download" for the download route). */

@@ -91,6 +91,7 @@ export function PdfToWordTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="application/pdf"
+        toolSlug="pdf-to-word"
         multiple={false}
         maxSizeMB={50}
         files={files}

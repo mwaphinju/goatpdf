@@ -88,6 +88,7 @@ export function MergePdfTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="application/pdf"
+        toolSlug="merge-pdf"
         multiple
         maxSizeMB={50}
         files={files}

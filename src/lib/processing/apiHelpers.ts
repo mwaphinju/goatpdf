@@ -59,8 +59,8 @@ export async function extractFilesFromFormData(
   return files;
 }
 
-/** Shared shape every tool route responds with: either a safe error, or a registered single-use download link. */
-export async function buildJobResponse(result: JobResult): Promise<Response> {
+/** Shared shape every tool route responds with: either a safe error, or a registered single-use download link. `toolId` is threaded through to the registry purely so the download route can report which tool produced the file for analytics — it plays no role in validation or processing. */
+export async function buildJobResponse(result: JobResult, toolId: string): Promise<Response> {
   if (!result.ok) {
     const status = JOB_ERROR_HTTP_STATUS[result.code] ?? 500;
     return Response.json({ code: result.code, message: result.message }, { status });
@@ -82,6 +82,7 @@ export async function buildJobResponse(result: JobResult): Promise<Response> {
     fileName: output.fileName,
     contentType: output.contentType,
     workspaceDir: result.workspaceDir,
+    toolId,
   });
 
   return Response.json({

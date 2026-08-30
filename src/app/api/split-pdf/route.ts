@@ -35,5 +35,5 @@ export async function POST(request: Request) {
   }
 
   const result = await runProcessingJob("split-pdf", files, options);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "split-pdf");
 }

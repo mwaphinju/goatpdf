@@ -96,6 +96,7 @@ export function DeletePagesTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="application/pdf"
+        toolSlug="delete-pdf-pages"
         multiple={false}
         maxSizeMB={50}
         files={files}

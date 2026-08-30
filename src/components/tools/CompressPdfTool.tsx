@@ -144,6 +144,7 @@ export function CompressPdfTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="application/pdf"
+        toolSlug="compress-pdf"
         multiple={false}
         maxSizeMB={50}
         files={files}

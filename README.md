@@ -21,13 +21,27 @@ A free, fast, mobile-friendly PDF utility website. No accounts, no payments, no 
 
 Every tool page now follows the same shape (title, description, upload, options, processing/success/error states, download, start over, related tools), with shared components for the repeated pieces and a pass for keyboard focus states, touch targets, and reduced-motion support. The app has also been through a security and privacy hardening pass: per-IP rate limiting on every processing and download endpoint, a full set of security headers (CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, and more — see [next.config.ts](./next.config.ts)), and real `/privacy`, `/terms`, `/about`, and `/contact` pages linked from the footer, with the Privacy Policy describing exactly what the implementation actually does (and doesn't) with your files.
 
-The site is also SEO-ready: every page has a unique title, meta description, canonical URL, and full Open Graph/Twitter Card metadata (including a real generated social-preview image); every tool page carries `SoftwareApplication`/`BreadcrumbList`/`FAQPage` structured data and real, tool-specific "How it works" + FAQ content (not a bare upload widget); `/sitemap.xml` and `/robots.txt` are live, and `/api/*` (processing endpoints, single-use download links) is excluded from both crawling and indexing. What's left before launch is infrastructure, not content or tool functionality: a Lighthouse/performance pass, a dependency audit, and a Dockerfile (with LibreOffice installed) for real deployment. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
+The site is also SEO-ready: every page has a unique title, meta description, canonical URL, and full Open Graph/Twitter Card metadata (including a real generated social-preview image); every tool page carries `SoftwareApplication`/`BreadcrumbList`/`FAQPage` structured data and real, tool-specific "How it works" + FAQ content (not a bare upload widget); `/sitemap.xml` and `/robots.txt` are live, and `/api/*` (processing endpoints, single-use download links) is excluded from both crawling and indexing.
+
+Optional, privacy-conscious analytics is available too (off by default) — see [Analytics](#analytics) below. What's left before launch is infrastructure, not content or tool functionality: a Lighthouse/performance pass, a dependency audit, and a Dockerfile (with LibreOffice installed) for real deployment. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
 
 **Before deploying**, set the `NEXT_PUBLIC_SITE_URL` environment variable to the real production domain — it defaults to a placeholder (`https://goatpdf.app`) used for canonical URLs, Open Graph tags, and the sitemap during development.
 
 ## How it works
 
 Files are uploaded, processed on the server, and made available for download through a private, random-ID link. Uploaded and generated files are **automatically deleted** shortly after processing — nothing is stored long-term, and nothing is ever exposed publicly.
+
+## Analytics
+
+GOAT PDF can optionally record a small, fixed set of usage events — page views, tool views, file uploads, processing started/completed/failed, and downloads completed, each with the relevant tool name (see [privacy](./src/app/privacy/page.tsx) for the exact list). It's **off by default** and controlled entirely through server-side environment variables — no third-party script is ever loaded in the browser, and nothing is tracked unless you explicitly turn it on:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `ANALYTICS_ENABLED` | No (default off) | Set to exactly `true` to turn analytics on at all. Any other value (or unset) means fully off — no events are recorded, logged, or sent anywhere. |
+| `ANALYTICS_ENDPOINT_URL` | No | A URL to forward each event to as a JSON POST. Works with any collector that accepts simple event POSTs — e.g. a self-hosted Plausible/Umami instance, or your own collector. If unset while analytics is enabled, events are just logged to the server's own console/logs instead. |
+| `ANALYTICS_SITE_ID` | No | An identifier some collectors expect (e.g. a Plausible domain or Umami website ID), included in the forwarded event payload. |
+
+What's tracked is deliberately narrow: an event is only ever `{ name, tool?, path? }` — never a filename, never file contents, never anything read from inside an uploaded file. There's no cookie and no persistent per-visitor identifier; events aren't linked to each other as coming from "the same person." Client-side events (page views, tool views, file uploads) are always sent to GOAT PDF's own `/api/analytics` route first and validated there — the browser never talks to a third-party analytics service directly. See [lib/analytics/](./src/lib/analytics/) for the implementation and [the Privacy Policy](./src/app/privacy/page.tsx) for the full, plain-language explanation.
 
 ## Tech stack
 

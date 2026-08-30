@@ -24,5 +24,5 @@ export async function POST(request: Request) {
 
   const files = await extractFilesFromFormData(formData);
   const result = await runProcessingJob("merge-pdf", files);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "merge-pdf");
 }

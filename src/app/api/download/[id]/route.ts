@@ -1,7 +1,9 @@
 import { promises as fs } from "node:fs";
+import { trackEvent } from "@/lib/analytics/track";
 import { removeWorkspace } from "@/lib/files/tempStorage";
 import { consumeJobOutput } from "@/lib/processing/jobRegistry";
 import { DOWNLOAD_RATE_LIMIT_PER_WINDOW, rateLimitResponse } from "@/lib/processing/apiHelpers";
+import { clientIpFromRequest } from "@/lib/security/clientIp";
 
 export const runtime = "nodejs";
 
@@ -21,6 +23,11 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
   try {
     const fileBuffer = await fs.readFile(output.filePath);
+
+    void trackEvent(
+      { name: "download_completed", tool: output.toolId },
+      { visitorIp: clientIpFromRequest(request) },
+    );
 
     return new Response(new Uint8Array(fileBuffer), {
       status: 200,

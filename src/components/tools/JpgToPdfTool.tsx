@@ -108,6 +108,7 @@ export function JpgToPdfTool() {
     <div className="flex flex-col gap-6">
       <UploadZone
         accept="image/jpeg,image/png"
+        toolSlug="jpg-to-pdf"
         multiple
         maxSizeMB={50}
         files={files}

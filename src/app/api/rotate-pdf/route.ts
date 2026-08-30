@@ -45,5 +45,5 @@ export async function POST(request: Request) {
 
   const options: RotatePdfOptions = { angle: angle as RotatePdfOptions["angle"], pages };
   const result = await runProcessingJob("rotate-pdf", files, options);
-  return buildJobResponse(result);
+  return buildJobResponse(result, "rotate-pdf");
 }

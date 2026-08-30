@@ -3,6 +3,7 @@
 import { useId, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent } from "react";
 import { FileIcon, UploadIcon, XIcon } from "@/components/icons";
+import { trackClientEvent } from "@/lib/analytics/trackClientEvent";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
 
@@ -16,6 +17,8 @@ export interface UploadZoneProps {
   hint?: string;
   /** Hides the built-in selected-files list — for tools that render their own (e.g. a reorderable list). */
   hideFileList?: boolean;
+  /** The tool this upload belongs to — reported as the `tool` parameter on the file_upload analytics event. No filename or file content is ever included. */
+  toolSlug?: string;
 }
 
 function extensionsFromAccept(accept: string): string[] {
@@ -35,6 +38,7 @@ export function UploadZone({
   label = "Drag and drop your file here",
   hint,
   hideFileList = false,
+  toolSlug,
 }: UploadZoneProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +72,7 @@ export function UploadZone({
     setError(null);
     const valid = validate(list);
     if (valid.length === 0) return;
+    if (toolSlug) trackClientEvent("file_upload", { tool: toolSlug });
     onFilesChange(multiple ? [...files, ...valid] : [valid[0]]);
   }
 

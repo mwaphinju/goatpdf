@@ -23,9 +23,9 @@ Every tool page now follows the same shape (title, description, upload, options,
 
 The site is also SEO-ready: every page has a unique title, meta description, canonical URL, and full Open Graph/Twitter Card metadata (including a real generated social-preview image); every tool page carries `SoftwareApplication`/`BreadcrumbList`/`FAQPage` structured data and real, tool-specific "How it works" + FAQ content (not a bare upload widget); `/sitemap.xml` and `/robots.txt` are live, and `/api/*` (processing endpoints, single-use download links) is excluded from both crawling and indexing.
 
-Optional, privacy-conscious analytics is available too (off by default) — see [Analytics](#analytics) below. What's left before launch is infrastructure, not content or tool functionality: a Lighthouse/performance pass, a dependency audit, and a Dockerfile (with LibreOffice installed) for real deployment. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
+Optional, privacy-conscious analytics is available too (off by default) — see [Analytics](#analytics) below. The app has also been through an [MVP audit](./MVP_AUDIT.md) (0 blocking defects) and a [production deployment review](./DEPLOYMENT.md), and now has a [Dockerfile](./Dockerfile) (Node + LibreOffice, multi-stage, non-root). What's left before launch: build-testing that Dockerfile for real (no Docker available in the environment it was written in), a Lighthouse/performance pass, and the actual deploy + smoke test. See the "Development phases" section of [CLAUDE.md](./CLAUDE.md) for the current plan and status.
 
-**Before deploying**, set the `NEXT_PUBLIC_SITE_URL` environment variable to the real production domain — it defaults to a placeholder (`https://goatpdf.app`) used for canonical URLs, Open Graph tags, and the sitemap during development.
+**Before deploying**, set the `NEXT_PUBLIC_SITE_URL` environment variable to the real production domain — it defaults to a placeholder (`https://goatpdf.app`) used for canonical URLs, Open Graph tags, and the sitemap during development. See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full pre-deploy checklist (this app targets a Docker-capable PaaS like Render/Railway/Fly.io — not Vercel, which can't run the LibreOffice dependency PDF to Word needs).
 
 ## How it works
 

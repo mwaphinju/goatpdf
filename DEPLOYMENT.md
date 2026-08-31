@@ -144,10 +144,10 @@ Given LibreOffice's Linux packaging is far more reliable on Debian/Ubuntu than A
 Grouped in the order they'd actually need doing. Nothing here has been done automatically — this is the list to work through before a real deploy.
 
 ### Must do before any deployment
-- [ ] **Write the `Dockerfile`** (Node + LibreOffice + native deps for sharp/@napi-rs/canvas) — does not exist yet. Use a Debian-based Node image (Section 5), not Alpine.
-- [ ] **Write `.dockerignore`** alongside it (exclude `node_modules`, `.next`, `.git`, `tests/`, `test-results/`, `playwright-report/`, `coverage/`).
-- [ ] Decide on `output: "standalone"` vs. full `node_modules` in the image, and if choosing `standalone`, explicitly handle the pdfjs-dist `standard_fonts`/`cmaps` asset-copy gap (Section 5) — then **actually convert a real PDF with non-embedded fonts through the built image** to confirm rendering isn't silently broken, not just that the container starts.
-- [ ] Use `npm ci` (not `npm install`) in the Docker build, so the committed `package-lock.json` is honored exactly.
+- [x] **Write the `Dockerfile`** — done (multi-stage, `node:20-bookworm-slim`, LibreOffice + `fonts-liberation` installed in the runtime stage, non-root user, `HEALTHCHECK`). **Not yet build-tested** — Docker isn't available in this environment, so this has only been reviewed for correctness (paths verified to exist, dependency placement checked against `package.json`), not actually run through `docker build`. Treat the first real build as the real test, ideally in CI before any deploy.
+- [x] **Write `.dockerignore`** — done.
+- [x] Decide on `output: "standalone"` vs. full `node_modules`: **chose full `node_modules`** (skip `standalone`) specifically to sidestep the pdfjs-dist `standard_fonts`/`cmaps` tracing gap (Section 5) rather than working around it — simpler and lower-risk for this app's size. Still true regardless: **actually convert a real PDF with non-embedded fonts through the built image** once it can be built, to confirm rendering isn't silently broken.
+- [x] Use `npm ci` (not `npm install`) in the Docker build — done, both stages.
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to the real production domain in the platform's environment configuration.
 - [ ] Replace the placeholder `support@goatpdf.app` contact email in `src/app/contact/page.tsx` with a real, monitored address on the real domain.
 - [ ] Confirm `GOATPDF_DISABLE_RATE_LIMIT` is **not** present anywhere in the production environment.
@@ -171,17 +171,29 @@ Grouped in the order they'd actually need doing. Nothing here has been done auto
 
 ### Nice-to-have, not blocking
 - [ ] Add a `.env.example` documenting the variables in Section 1 (explicitly *not* including `GOATPDF_DISABLE_RATE_LIMIT`).
-- [ ] Add a dedicated `/api/health` (or similar) endpoint if the platform's default health check isn't sufficient.
-- [ ] Set `NEXT_TELEMETRY_DISABLED=1` in the Docker build.
+- [ ] Add a dedicated `/api/health` (or similar) endpoint if the platform's default health check isn't sufficient (the Dockerfile's own `HEALTHCHECK` currently just pings `/`, which works today).
+- [x] Set `NEXT_TELEMETRY_DISABLED=1` in the Docker build — done, both stages.
 - [ ] After the first real deploy, do one production smoke test per tool (all 8) against the live URL, not just against `localhost`.
 
 ---
 
-## What this document does *not* do
+## Why Vercel isn't an option for this app as built
 
-- It does not create the `Dockerfile` or `.dockerignore`.
-- It does not set any environment variable on any platform.
-- It does not register or configure a domain.
-- It does not deploy the application anywhere.
+Asked and answered directly: **Vercel doesn't work here**, not as a matter of configuration but of architecture. Three specific incompatibilities:
+
+1. **PDF to Word needs a real, installed LibreOffice binary.** Vercel Serverless/Edge Functions run in a locked-down sandbox with no `apt-get`, no arbitrary system binaries, and a read-only filesystem outside `/tmp` — there's no way to install a several-hundred-MB LibreOffice into that environment. This is exactly the "serverless binary/filesystem constraint" `CLAUDE.md`'s architecture section calls out as the reason Docker-on-a-PaaS was chosen in the first place.
+2. **Job state is in-memory and assumes one persistent process** (Section 7). Vercel functions are torn down between invocations with no guarantee the same instance handles both the "process" and "download" requests for a job — downloads would become unreliable, rate limiting would silently stop working, and the `setInterval`-based cleanup sweep wouldn't reliably run at all.
+3. **Function duration/payload limits** are a poor fit for 50–200 MB uploads and a 120-second PDF-to-Word timeout.
+
+None of this is a blocker for Docker-on-a-PaaS (Render/Railway/Fly.io-style), which is what this Dockerfile targets — it's specifically a Vercel incompatibility.
+
+---
+
+## What this document (and the Dockerfile) do *not* do
+
+- The Dockerfile has not been build-tested — Docker isn't available in this environment. It's been reviewed for correctness, not proven by an actual `docker build`.
+- Nothing here sets any environment variable on any real platform.
+- Nothing here registers or configures a domain.
+- Nothing here deploys the application anywhere.
 
 All of the above remain explicit, separate actions for whenever deployment is actually authorized.

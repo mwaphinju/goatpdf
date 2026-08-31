@@ -10,6 +10,17 @@ FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# NEXT_PUBLIC_* variables are inlined into the client bundle at build time,
+# not read at runtime — Docker build args have to be explicitly declared
+# (ARG) and bridged to a real env var (ENV) for `next build` to see them at
+# all; a platform passing --build-arg for an undeclared name is silently a
+# no-op. Render (see render.yaml) auto-translates dashboard env vars into
+# matching --build-arg values, but only this declaration makes that reach
+# Next.js. Falls back to lib/seo.ts's own placeholder if unset (e.g. a
+# plain local `docker build` with no --build-arg).
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
 COPY package.json package-lock.json ./
 RUN npm ci
 

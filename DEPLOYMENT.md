@@ -38,7 +38,7 @@ Every `process.env.*` read in the app (excluding test-only usage), what it defau
 - `serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"]` is already correctly configured so these native/asset-heavy packages are `require()`'d from `node_modules` at runtime instead of bundled — this is necessary and already correct.
 - `allowedDevOrigins` is dev-only (LAN testing) and has zero effect on `next build`/`next start` — no action needed.
 - `package-lock.json` **is committed** — good, means the Docker build can (and should) use `npm ci` for a reproducible install rather than `npm install`.
-- No `engines` field in `package.json` pinning a Node version. The dev environment runs Node 24; `@types/node` is pinned to `^20`. Recommend explicitly choosing and pinning a Node LTS version (20 or 22) for the Docker base image rather than leaving it implicit.
+- No `engines` field in `package.json` pinning a Node version. **Confirmed by an actual build (not just inspection): `pdfjs-dist@6.3.289` requires Node `>=22.13.0`** (`npm ci` emits an `EBADENGINE` warning under Node 20 and, per its own error text, is not guaranteed to behave correctly) — the Dockerfile uses `node:22-bookworm-slim` accordingly. `@types/node`'s `^20` range in `package.json` is a looser floor (dev-time types only) and doesn't reflect this real runtime constraint.
 - **No `Dockerfile` and no `.dockerignore` exist in the repo yet.** This is the single largest gap standing between this app and an actual deployment — see the checklist.
 
 ---
@@ -97,7 +97,7 @@ This is the area with the most real deployment risk. Three native/external depen
 
 ### sharp (Compress PDF, PDF to JPG rendering pipeline's re-encoding)
 - Ships prebuilt native binaries selected by platform/libc at install time. **The `npm install`/`npm ci` step must run *inside* the Docker build, targeting the container's actual OS/architecture** — never `COPY` a `node_modules` directory installed on the host (macOS/Windows) into the image; the binaries won't match and sharp will fail to load at runtime.
-- Works on both Debian-based and Alpine (musl) images, but Alpine sometimes needs extra flags/newer sharp versions to get prebuilt binaries instead of falling back to a slow from-source compile. Combined with the LibreOffice requirement below, a **Debian-based image (e.g. `node:20-slim` / `node:20-bookworm-slim`) is the safer default**, not Alpine.
+- Works on both Debian-based and Alpine (musl) images, but Alpine sometimes needs extra flags/newer sharp versions to get prebuilt binaries instead of falling back to a slow from-source compile. Combined with the LibreOffice requirement below, a **Debian-based image (e.g. `node:22-bookworm-slim`) is the safer default**, not Alpine.
 
 ### @napi-rs/canvas + pdfjs-dist (PDF to JPG rendering)
 - `@napi-rs/canvas` also ships prebuilt native binaries — same "install inside the container" requirement as sharp.
@@ -144,14 +144,18 @@ Given LibreOffice's Linux packaging is far more reliable on Debian/Ubuntu than A
 Grouped in the order they'd actually need doing. Nothing here has been done automatically — this is the list to work through before a real deploy.
 
 ### Must do before any deployment
-- [x] **Write the `Dockerfile`** — done (multi-stage, `node:20-bookworm-slim`, LibreOffice + `fonts-liberation` installed in the runtime stage, non-root user, `HEALTHCHECK`). **Not yet build-tested** — Docker isn't available in this environment, so this has only been reviewed for correctness (paths verified to exist, dependency placement checked against `package.json`), not actually run through `docker build`. Treat the first real build as the real test, ideally in CI before any deploy.
+- [x] **Write the `Dockerfile`** — done (multi-stage, `node:22-bookworm-slim`, LibreOffice + `fonts-liberation` installed in the runtime stage, non-root user, `HEALTHCHECK`).
+- [x] **Build-tested for real** — `docker build` succeeds end-to-end (`goatpdf:local`, 764 MB compressed). Two real bugs were caught only by actually building it, not by review alone, and both are now fixed in the Dockerfile:
+  - `pdfjs-dist@6.3.289` requires Node `>=22.13.0`; the original `node:20-bookworm-slim` base triggered an `EBADENGINE` warning during `npm ci`. Bumped both stages to `node:22-bookworm-slim`.
+  - LibreOffice's ~150-package apt install hit a mid-download DNS failure on one attempt (`Could not resolve 'deb.debian.org'`) — a real, observed transient-network failure mode, not hypothetical. Added `-o Acquire::Retries=5` to the install command.
+  - The built image was then actually run (`docker run`) and smoke-tested against real fixture files, not just started: homepage 200 with all security headers present; **PDF to Word succeeded through the container's actual LibreOffice install**, output verified as a genuine `.docx` via `file(1)`; **PDF to JPG succeeded**, output verified as a real 4-page ZIP of valid JPEGs — the specific test for the `output: "standalone"` risk below, since a broken font path would have produced this exact request without necessarily failing outright; confirmed `node_modules/pdfjs-dist/standard_fonts` (16 files) and `cmaps` (169 files) are actually present in the running container; Merge PDF (pure pdf-lib, no native deps) also succeeded; and the temp-workspace cleanup-on-download behavior was confirmed live inside the container (workspace present after processing, gone immediately after download, correct `0700`/non-root ownership throughout). Container `HEALTHCHECK` reported `healthy`.
 - [x] **Write `.dockerignore`** — done.
-- [x] Decide on `output: "standalone"` vs. full `node_modules`: **chose full `node_modules`** (skip `standalone`) specifically to sidestep the pdfjs-dist `standard_fonts`/`cmaps` tracing gap (Section 5) rather than working around it — simpler and lower-risk for this app's size. Still true regardless: **actually convert a real PDF with non-embedded fonts through the built image** once it can be built, to confirm rendering isn't silently broken.
+- [x] Decide on `output: "standalone"` vs. full `node_modules`: **chose full `node_modules`** (skip `standalone`) specifically to sidestep the pdfjs-dist `standard_fonts`/`cmaps` tracing gap (Section 5) rather than working around it. **Confirmed correct by the real build test above**, not just reasoned about — the font asset directories are actually present and PDF to JPG actually produces correct output through the container.
 - [x] Use `npm ci` (not `npm install`) in the Docker build — done, both stages.
 - [ ] Set `NEXT_PUBLIC_SITE_URL` to the real production domain in the platform's environment configuration.
 - [ ] Replace the placeholder `support@goatpdf.app` contact email in `src/app/contact/page.tsx` with a real, monitored address on the real domain.
 - [ ] Confirm `GOATPDF_DISABLE_RATE_LIMIT` is **not** present anywhere in the production environment.
-- [ ] Choose and pin a Node LTS version for the base image (20 or 22 recommended, matching `@types/node`'s `^20` range at minimum).
+- [x] Choose and pin a Node LTS version for the base image — done: `node:22-bookworm-slim`, required by `pdfjs-dist@6.3.289`'s real engine constraint (Section 2), confirmed by the build test above.
 
 ### Platform configuration
 - [ ] Confirm the target platform terminates HTTPS automatically for the chosen domain (custom domain + managed TLS cert).
@@ -191,7 +195,7 @@ None of this is a blocker for Docker-on-a-PaaS (Render/Railway/Fly.io-style), wh
 
 ## What this document (and the Dockerfile) do *not* do
 
-- The Dockerfile has not been build-tested — Docker isn't available in this environment. It's been reviewed for correctness, not proven by an actual `docker build`.
+- The Dockerfile has been built and run locally (`docker build` + `docker run`, smoke-tested including PDF to Word and PDF to JPG through the real container) — but only on one machine, once. It has not been pushed to any registry, and has not been run on the actual target PaaS.
 - Nothing here sets any environment variable on any real platform.
 - Nothing here registers or configures a domain.
 - Nothing here deploys the application anywhere.

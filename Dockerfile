@@ -5,7 +5,7 @@
 #    Tailwind's PostCSS plugin, eslint-config-next) needed to run
 #    `next build`. Produces .next/.
 ########################################################################
-FROM node:20-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS builder
 
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -34,7 +34,7 @@ RUN npm run build
 # binaries — Alpine (musl) risks slow from-source native builds on top of
 # a much harder LibreOffice install.
 ########################################################################
-FROM node:20-bookworm-slim AS runner
+FROM node:22-bookworm-slim AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
@@ -45,7 +45,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # if LibreOffice itself is present) + metric-compatible fonts so
 # converted/rendered documents render sensibly instead of falling back to
 # a generic substitute.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+#
+# Acquire::Retries: LibreOffice's dependency tree is large (~150 packages)
+# and slow to fetch; a mid-download DNS/network blip on a long apt-get run
+# is a real, observed failure mode here, not hypothetical — apt retrying
+# a handful of times is cheap insurance against it.
+RUN apt-get update && apt-get install -y --no-install-recommends -o Acquire::Retries=5 \
     libreoffice \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*

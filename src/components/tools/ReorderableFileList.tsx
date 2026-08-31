@@ -57,10 +57,10 @@ export function ReorderableFileList({ files, onChange, label }: ReorderableFileL
           )}
         >
           <GripIcon className="h-4 w-4 shrink-0 cursor-grab text-slate-300" />
-          <span className="w-5 shrink-0 text-center text-xs font-medium text-slate-400">{index + 1}</span>
+          <span className="w-5 shrink-0 text-center text-xs font-medium text-slate-500">{index + 1}</span>
           <FileIcon className="h-5 w-5 shrink-0 text-slate-400" />
           <span className="min-w-0 flex-1 truncate font-medium text-slate-700">{file.name}</span>
-          <span className="shrink-0 text-slate-400">{formatBytes(file.size)}</span>
+          <span className="shrink-0 text-slate-500">{formatBytes(file.size)}</span>
 
           <button
             type="button"

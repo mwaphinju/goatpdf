@@ -2,7 +2,7 @@ import path from "node:path";
 import { trackEvent } from "@/lib/analytics/track";
 import { createJobWorkspace, removeWorkspace, writeWorkspaceFile } from "@/lib/files/tempStorage";
 import { validateFile, type ValidationFailure } from "@/lib/files/validate";
-import { ProcessingJobError } from "@/lib/processing/errors";
+import { ProcessingJobError, TotalSizeTooLargeError } from "@/lib/processing/errors";
 import { logJobEvent } from "@/lib/processing/logger";
 import { getToolConfig } from "@/lib/processing/toolConfigs";
 import { withTimeout } from "@/lib/processing/timeout";
@@ -18,6 +18,13 @@ export type JobResult =
   | { ok: false; code: string; message: string; jobId?: string };
 
 const GENERIC_FAILURE_MESSAGE = "Something went wrong while processing your file. Please try again.";
+
+// Matches mergePdf.ts's / jpgToPdf.ts's own combined-size limit for those
+// tools. Checked here too — using each file's already-known reported size,
+// before any workspace is created or anything is written to disk — so an
+// oversized multi-file batch is rejected immediately rather than only after
+// being fully staged to disk inside the processor (MVP audit finding SEC-1).
+const MAX_COMBINED_UPLOAD_SIZE_BYTES = 200 * 1024 * 1024;
 
 /**
  * The single entry point every tool runs through: look up the tool's config,
@@ -83,6 +90,13 @@ export async function runProcessingJobWithConfig(
   if (failures.length > 0) {
     void trackEvent({ name: "processing_failed", tool: toolId });
     return { ok: false, code: "VALIDATION_FAILED", message: failures[0].message };
+  }
+
+  const combinedSize = files.reduce((sum, file) => sum + file.size, 0);
+  if (combinedSize > MAX_COMBINED_UPLOAD_SIZE_BYTES) {
+    void trackEvent({ name: "processing_failed", tool: toolId });
+    const sizeError = new TotalSizeTooLargeError(Math.round(MAX_COMBINED_UPLOAD_SIZE_BYTES / (1024 * 1024)));
+    return { ok: false, code: sizeError.code, message: sizeError.message };
   }
 
   const workspace = await createJobWorkspace();

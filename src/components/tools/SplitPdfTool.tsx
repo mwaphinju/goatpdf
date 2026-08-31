@@ -172,7 +172,7 @@ export function SplitPdfTool() {
                 aria-invalid={rangesError ? true : undefined}
                 aria-describedby="page-ranges-hint"
               />
-              <p id="page-ranges-hint" className="text-xs text-slate-400">
+              <p id="page-ranges-hint" className="text-xs text-slate-500">
                 Separate pages or ranges with commas, e.g. 1-3, 5, 7-9.
               </p>
               {rangesError && (

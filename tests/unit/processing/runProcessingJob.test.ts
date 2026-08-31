@@ -130,6 +130,35 @@ describe("runProcessingJobWithConfig — oversized files", () => {
   });
 });
 
+describe("runProcessingJobWithConfig — combined size limit", () => {
+  it("rejects a combined-oversized batch before ever creating a job workspace (MVP audit SEC-1)", async () => {
+    const processor = vi.fn(async () => ({ outputs: [] }));
+    const config = makeConfig(processor, { minFiles: 1, maxFiles: 5 });
+    // Each file is well under the per-file limit; only the combined total (225MB) exceeds
+    // the 200MB combined cap — this must be caught before any staging/disk I/O occurs.
+    const files = Array.from({ length: 5 }, () => pdfInput({ size: 45 * 1024 * 1024 }));
+
+    const result = await runProcessingJobWithConfig("test-tool", config, files);
+
+    expect(result).toMatchObject({ ok: false, code: "TOTAL_SIZE_TOO_LARGE" });
+    expect(processor).not.toHaveBeenCalled();
+    // No jobId means no workspace was ever created for this rejection — unlike a
+    // processor failure, which always carries the jobId of the workspace it cleaned up.
+    expect((result as { jobId?: string }).jobId).toBeUndefined();
+  });
+
+  it("allows a combined size at or under the limit", async () => {
+    const processor = vi.fn(async () => ({ outputs: [] }));
+    const config = makeConfig(processor, { minFiles: 1, maxFiles: 5 });
+    const files = Array.from({ length: 4 }, () => pdfInput({ size: 45 * 1024 * 1024 })); // 180MB total
+
+    const result = await runProcessingJobWithConfig("test-tool", config, files);
+
+    expect(result.ok).toBe(true);
+    expect(processor).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("runProcessingJobWithConfig — cleanup", () => {
   it("cleans up the job workspace when the processor fails", async () => {
     let workspaceDir = "";

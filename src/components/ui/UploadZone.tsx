@@ -120,7 +120,7 @@ export function UploadZone({
           </p>
         </div>
         {hint && (
-          <p id={`${inputId}-hint`} className="text-xs text-slate-400">
+          <p id={`${inputId}-hint`} className="text-xs text-slate-500">
             {hint}
           </p>
         )}
@@ -154,7 +154,7 @@ export function UploadZone({
               <span className="flex min-w-0 items-center gap-2">
                 <FileIcon className="h-5 w-5 shrink-0 text-slate-400" />
                 <span className="truncate font-medium text-slate-700">{file.name}</span>
-                <span className="shrink-0 text-slate-400">{formatBytes(file.size)}</span>
+                <span className="shrink-0 text-slate-500">{formatBytes(file.size)}</span>
               </span>
               <button
                 type="button"

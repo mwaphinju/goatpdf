@@ -1,0 +1,32 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Lets Render deploy this repo's Dockerfile directly (New > Blueprint in the
+# Render dashboard, pointed at this repo) instead of clicking through the
+# same options by hand. Uses the free plan per the user's explicit choice —
+# see DEPLOYMENT.md for the real caveat: Render's free web services are
+# 512MB RAM / 0.1 CPU, which may be tight for LibreOffice conversions and
+# image rendering under real load. If PDF to Word / PDF to JPG time out or
+# OOM in practice, upgrading `plan` below to `starter` is the fix.
+services:
+  - name: goatpdf
+    type: web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      # Render injects PORT itself (defaults to 10000); next start already
+      # respects process.env.PORT with no code change needed — see
+      # DEPLOYMENT.md Section 3.
+      - key: NEXT_PUBLIC_SITE_URL
+        sync: false # set this in the Render dashboard once the real
+          # onrender.com URL (or a custom domain) is known — see
+          # DEPLOYMENT.md Section 8. Left unset, it falls back to the
+          # https://goatpdf.app placeholder used during development.
+      - key: ANALYTICS_ENABLED
+        value: "false" # explicit and off by default; flip to "true" in the
+          # dashboard only if analytics forwarding is actually configured.
+    # GOATPDF_DISABLE_RATE_LIMIT is deliberately not listed here — it must
+    # never be set in a real deployment (test-only escape hatch; see
+    # DEPLOYMENT.md Section 1).

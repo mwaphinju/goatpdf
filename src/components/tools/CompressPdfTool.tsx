@@ -6,9 +6,12 @@ import { ProcessingState } from "@/components/ui/ProcessingState";
 import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import type { CompressionPreset } from "@/lib/pdf/compressPdf";
+
+const TOOL_NAME = "compress-pdf";
 
 type FlowState =
   | { status: "idle" }
@@ -53,6 +56,7 @@ export function CompressPdfTool() {
     if (!file) return;
     const originalSize = file.size;
     setFlow({ status: "processing" });
+    trackProcessingStarted(TOOL_NAME, 1);
 
     try {
       const formData = new FormData();
@@ -63,6 +67,7 @@ export function CompressPdfTool() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data) {
+        trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
           message: data?.message ?? "Something went wrong while compressing your file. Please try again.",
@@ -70,6 +75,7 @@ export function CompressPdfTool() {
         return;
       }
 
+      trackProcessingCompleted(TOOL_NAME);
       setFlow({
         status: "success",
         downloadUrl: data.downloadUrl,
@@ -78,6 +84,7 @@ export function CompressPdfTool() {
         compressedSize: data.fileSize,
       });
     } catch {
+      trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
         message: "Network error — please check your connection and try again.",
@@ -87,7 +94,7 @@ export function CompressPdfTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    const result = await downloadFile(flow.downloadUrl, flow.fileName, TOOL_NAME);
     if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 

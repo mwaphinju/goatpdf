@@ -21,6 +21,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
+# Same reasoning as NEXT_PUBLIC_SITE_URL above — see lib/analytics/ga.ts and
+# ANALYTICS.md. Left unset, GA4 is simply disabled (no script, no requests).
+ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
+ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
+
 COPY package.json package-lock.json ./
 RUN npm ci
 

@@ -7,10 +7,13 @@ import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { PdfPageCountStatus } from "@/components/tools/PdfPageCountStatus";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import { usePdfPageCount } from "@/lib/hooks/usePdfPageCount";
 import { parsePageRanges } from "@/lib/pdf/pageRanges";
+
+const TOOL_NAME = "split-pdf";
 
 type Mode = "all-pages" | "ranges";
 
@@ -48,6 +51,7 @@ export function SplitPdfTool() {
   async function handleSplit() {
     if (!file) return;
     setFlow({ status: "processing" });
+    trackProcessingStarted(TOOL_NAME, 1);
 
     try {
       const formData = new FormData();
@@ -59,6 +63,7 @@ export function SplitPdfTool() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data) {
+        trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
           message: data?.message ?? "Something went wrong while splitting your file. Please try again.",
@@ -66,6 +71,7 @@ export function SplitPdfTool() {
         return;
       }
 
+      trackProcessingCompleted(TOOL_NAME);
       setFlow({
         status: "success",
         downloadUrl: data.downloadUrl,
@@ -73,6 +79,7 @@ export function SplitPdfTool() {
         fileSizeLabel: formatBytes(data.fileSize),
       });
     } catch {
+      trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
         message: "Network error — please check your connection and try again.",
@@ -82,7 +89,7 @@ export function SplitPdfTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    const result = await downloadFile(flow.downloadUrl, flow.fileName, TOOL_NAME);
     if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 

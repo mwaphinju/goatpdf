@@ -24,6 +24,10 @@ services:
           # onrender.com URL (or a custom domain) is known — see
           # DEPLOYMENT.md Section 8. Left unset, it falls back to the
           # https://goatpdf.app placeholder used during development.
+      - key: NEXT_PUBLIC_GA_MEASUREMENT_ID
+        sync: false # optional — set to a real GA4 Measurement ID (G-...)
+          # in the Render dashboard to enable Google Analytics. Left unset,
+          # GA4 stays fully disabled. See ANALYTICS.md.
       - key: ANALYTICS_ENABLED
         value: "false" # explicit and off by default; flip to "true" in the
           # dashboard only if analytics forwarding is actually configured.

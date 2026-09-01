@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AnalyticsPageView } from "@/components/analytics/AnalyticsPageView";
 import { JsonLd } from "@/components/JsonLd";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics/ga";
 import { buildPageMetadata, SITE_URL } from "@/lib/seo";
 import { websiteStructuredData } from "@/lib/structuredData";
 import "./globals.css";
@@ -49,6 +51,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <main className="flex-1">{children}</main>
         <Footer />
       </body>
+      {/* Only mounted when a Measurement ID is configured — see lib/analytics/ga.ts.
+          GA4's own Enhanced Measurement tracks page views and client-side route
+          changes automatically (confirmed via Next.js's own docs — see ANALYTICS.md),
+          so no manual page_view call is made here to avoid double-counting. */}
+      {GA_MEASUREMENT_ID && <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />}
     </html>
   );
 }

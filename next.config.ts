@@ -18,18 +18,30 @@ import type { NextConfig } from "next";
 // filenames are sanitized (see files/validate.ts) before they're ever
 // displayed — but this is a deliberate, documented trade-off, not an
 // oversight.
+//
+// GA4 (gtag.js, see lib/analytics/ga.ts) is the one deliberate exception to
+// "no external origins" — it needs its script origin in script-src and its
+// beacon/collect origins in connect-src (img-src too: gtag.js falls back to
+// an image-pixel beacon when fetch/sendBeacon aren't available). Only added
+// when a Measurement ID is actually configured, so an app with GA4 left
+// unconfigured keeps the original, fully self-contained policy verbatim.
+const GA_ENABLED = Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
+const GA_SCRIPT_ORIGIN = "https://www.googletagmanager.com";
+const GA_CONNECT_ORIGINS = "https://www.google-analytics.com https://www.googletagmanager.com";
+const GA_IMG_ORIGIN = "https://www.google-analytics.com";
+
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${GA_ENABLED ? ` ${GA_SCRIPT_ORIGIN}` : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  `img-src 'self' data:${GA_ENABLED ? ` ${GA_IMG_ORIGIN}` : ""}`,
   "font-src 'self'",
   // 'data:' doesn't allow fetching a remote origin — a data: URI is
   // constructed entirely from the current document, not fetched over the
   // network — so allowing it here doesn't weaken protection against
   // exfiltration to an attacker-controlled origin. Needed for `fetch("data:...")`
   // → Blob conversions (used by the drag-and-drop e2e test's DataTransfer setup).
-  "connect-src 'self' data:",
+  `connect-src 'self' data:${GA_ENABLED ? ` ${GA_CONNECT_ORIGINS}` : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

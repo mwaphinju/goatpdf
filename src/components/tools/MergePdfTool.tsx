@@ -7,6 +7,7 @@ import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { ReorderableFileList } from "@/components/tools/ReorderableFileList";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 
@@ -16,6 +17,7 @@ type FlowState =
   | { status: "success"; downloadUrl: string; fileName: string; fileSizeLabel: string }
   | { status: "error"; message: string };
 
+const TOOL_NAME = "merge-pdf";
 const MIN_FILES = 2;
 const MAX_FILES = 20;
 
@@ -30,6 +32,7 @@ export function MergePdfTool() {
 
   async function handleMerge() {
     setFlow({ status: "processing" });
+    trackProcessingStarted(TOOL_NAME, files.length);
 
     try {
       const formData = new FormData();
@@ -39,6 +42,7 @@ export function MergePdfTool() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data) {
+        trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
           message: data?.message ?? "Something went wrong while merging your files. Please try again.",
@@ -46,6 +50,7 @@ export function MergePdfTool() {
         return;
       }
 
+      trackProcessingCompleted(TOOL_NAME);
       setFlow({
         status: "success",
         downloadUrl: data.downloadUrl,
@@ -53,6 +58,7 @@ export function MergePdfTool() {
         fileSizeLabel: formatBytes(data.fileSize),
       });
     } catch {
+      trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
         message: "Network error — please check your connection and try again.",
@@ -62,7 +68,7 @@ export function MergePdfTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    const result = await downloadFile(flow.downloadUrl, flow.fileName, TOOL_NAME);
     if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 

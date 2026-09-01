@@ -7,6 +7,7 @@ import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { ReorderableFileList } from "@/components/tools/ReorderableFileList";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import type { Margin, Orientation, PageSize } from "@/lib/pdf/jpgToPdf";
@@ -17,6 +18,7 @@ type FlowState =
   | { status: "success"; downloadUrl: string; fileName: string; fileSizeLabel: string }
   | { status: "error"; message: string };
 
+const TOOL_NAME = "jpg-to-pdf";
 const MAX_FILES = 30;
 
 const PAGE_SIZE_OPTIONS: { value: PageSize; label: string; description: string }[] = [
@@ -49,6 +51,7 @@ export function JpgToPdfTool() {
   async function handleConvert() {
     if (files.length === 0) return;
     setFlow({ status: "processing" });
+    trackProcessingStarted(TOOL_NAME, files.length);
 
     try {
       const formData = new FormData();
@@ -61,6 +64,7 @@ export function JpgToPdfTool() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data) {
+        trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
           message: data?.message ?? "Something went wrong while converting your images. Please try again.",
@@ -68,6 +72,7 @@ export function JpgToPdfTool() {
         return;
       }
 
+      trackProcessingCompleted(TOOL_NAME);
       setFlow({
         status: "success",
         downloadUrl: data.downloadUrl,
@@ -75,6 +80,7 @@ export function JpgToPdfTool() {
         fileSizeLabel: formatBytes(data.fileSize),
       });
     } catch {
+      trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
         message: "Network error — please check your connection and try again.",
@@ -84,7 +90,7 @@ export function JpgToPdfTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    const result = await downloadFile(flow.downloadUrl, flow.fileName, TOOL_NAME);
     if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 

@@ -8,9 +8,12 @@ import { UploadZone } from "@/components/ui/UploadZone";
 import { PageSelector } from "@/components/tools/PageSelector";
 import { PdfPageCountStatus } from "@/components/tools/PdfPageCountStatus";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import { usePdfPageCount } from "@/lib/hooks/usePdfPageCount";
+
+const TOOL_NAME = "delete-pdf-pages";
 
 type FlowState =
   | { status: "idle" }
@@ -39,6 +42,7 @@ export function DeletePagesTool() {
   async function handleDelete() {
     if (!file) return;
     setFlow({ status: "processing" });
+    trackProcessingStarted(TOOL_NAME, 1);
 
     try {
       const formData = new FormData();
@@ -49,6 +53,7 @@ export function DeletePagesTool() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data) {
+        trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
           message: data?.message ?? "Something went wrong while deleting pages. Please try again.",
@@ -56,6 +61,7 @@ export function DeletePagesTool() {
         return;
       }
 
+      trackProcessingCompleted(TOOL_NAME);
       setFlow({
         status: "success",
         downloadUrl: data.downloadUrl,
@@ -63,6 +69,7 @@ export function DeletePagesTool() {
         fileSizeLabel: formatBytes(data.fileSize),
       });
     } catch {
+      trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
         message: "Network error — please check your connection and try again.",
@@ -72,7 +79,7 @@ export function DeletePagesTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    const result = await downloadFile(flow.downloadUrl, flow.fileName, TOOL_NAME);
     if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 

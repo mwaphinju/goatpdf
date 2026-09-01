@@ -43,11 +43,32 @@ GOAT PDF can optionally record a small, fixed set of usage events — page views
 
 What's tracked is deliberately narrow: an event is only ever `{ name, tool?, path? }` — never a filename, never file contents, never anything read from inside an uploaded file. There's no cookie and no persistent per-visitor identifier; events aren't linked to each other as coming from "the same person." Client-side events (page views, tool views, file uploads) are always sent to GOAT PDF's own `/api/analytics` route first and validated there — the browser never talks to a third-party analytics service directly. See [lib/analytics/](./src/lib/analytics/) for the implementation and [the Privacy Policy](./src/app/privacy/page.tsx) for the full, plain-language explanation.
 
+## Google Analytics 4
+
+Separately from the internal analytics above, GOAT PDF can also send events to a **Google Analytics 4** property, using Next.js's own recommended `@next/third-parties/google` integration. It's off by default, controlled by one environment variable:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | No (default off) | Your GA4 Web Data Stream's Measurement ID (starts with `G-`). Unset, GA4 is fully disabled — no script is loaded, no requests to Google are made, and every tracking call in the app becomes a no-op. |
+
+**Finding your Measurement ID:** in the [Google Analytics](https://analytics.google.com) admin panel, go to **Admin → Data Streams → (your web stream)** — the Measurement ID is shown at the top right of that stream's details page.
+
+**Configuring it:**
+- Locally: copy `.env.example` to `.env.local` and set `NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXX...`.
+- On Render: since this is a build-time value (`NEXT_PUBLIC_*` variables are inlined into the client bundle when `next build` runs, not read at request time), set it as an environment variable in the Render dashboard for this service — Render automatically passes dashboard env vars through to `docker build` as build args, and the Dockerfile now declares `NEXT_PUBLIC_GA_MEASUREMENT_ID` to receive it (the same pattern `NEXT_PUBLIC_SITE_URL` already uses). Setting or changing it triggers a rebuild.
+
+**Verifying it's working:** see [ANALYTICS.md](./ANALYTICS.md)'s "Verify Analytics" section for a step-by-step check using GA4's Realtime report and DebugView.
+
+Because `NEXT_PUBLIC_*` values are inlined at build time, **never hard-code a real Measurement ID into source code** — it's only ever read from the environment, and no real value is committed to this repository.
+
+See [ANALYTICS.md](./ANALYTICS.md) for the full list of events, their parameters, and exactly what is (and is never) sent.
+
 ## Tech stack
 
 - **Framework:** Next.js (App Router) + TypeScript
 - **Styling:** Tailwind CSS
 - **PDF processing:** `pdf-lib`, `pdfjs-dist` + `@napi-rs/canvas` (rasterization), `sharp`, `jszip`, LibreOffice (headless, for PDF → Word)
+- **Analytics:** an internal, self-hosted event log (see above), plus optional Google Analytics 4 via `@next/third-parties` (see [ANALYTICS.md](./ANALYTICS.md)) — both off by default
 - **Testing:** Vitest (unit) + Playwright (end-to-end)
 - **Deployment:** Docker, deployed to a Docker-capable PaaS
 

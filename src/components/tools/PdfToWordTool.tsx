@@ -6,6 +6,7 @@ import { ProcessingState } from "@/components/ui/ProcessingState";
 import { ResultDownload } from "@/components/ui/ResultDownload";
 import { UploadZone } from "@/components/ui/UploadZone";
 import { ToolActionBar } from "@/components/tools/ToolActionBar";
+import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 
@@ -14,6 +15,8 @@ type FlowState =
   | { status: "processing" }
   | { status: "success"; downloadUrl: string; fileName: string; fileSizeLabel: string }
   | { status: "error"; message: string };
+
+const TOOL_NAME = "pdf-to-word";
 
 const FORMATTING_NOTICE =
   "Conversion quality depends on your PDF. Complex layouts, tables, unusual fonts, and images may not come out exactly as they looked in the original — always review the converted document before using it.";
@@ -32,6 +35,7 @@ export function PdfToWordTool() {
   async function handleConvert() {
     if (!file) return;
     setFlow({ status: "processing" });
+    trackProcessingStarted(TOOL_NAME, 1);
 
     try {
       const formData = new FormData();
@@ -41,6 +45,7 @@ export function PdfToWordTool() {
       const data = await response.json().catch(() => null);
 
       if (!response.ok || !data) {
+        trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
           message: data?.message ?? "Something went wrong while converting your PDF. Please try again.",
@@ -48,6 +53,7 @@ export function PdfToWordTool() {
         return;
       }
 
+      trackProcessingCompleted(TOOL_NAME);
       setFlow({
         status: "success",
         downloadUrl: data.downloadUrl,
@@ -55,6 +61,7 @@ export function PdfToWordTool() {
         fileSizeLabel: formatBytes(data.fileSize),
       });
     } catch {
+      trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
         message: "Network error — please check your connection and try again.",
@@ -64,7 +71,7 @@ export function PdfToWordTool() {
 
   async function handleDownload() {
     if (flow.status !== "success") return;
-    const result = await downloadFile(flow.downloadUrl, flow.fileName);
+    const result = await downloadFile(flow.downloadUrl, flow.fileName, TOOL_NAME);
     if (!result.ok) setFlow({ status: "error", message: result.message });
   }
 

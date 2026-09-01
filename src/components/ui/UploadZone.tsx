@@ -3,6 +3,7 @@
 import { useId, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent } from "react";
 import { FileIcon, UploadIcon, XIcon } from "@/components/icons";
+import { trackFileUpload } from "@/lib/analytics/ga";
 import { trackClientEvent } from "@/lib/analytics/trackClientEvent";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
@@ -72,7 +73,10 @@ export function UploadZone({
     setError(null);
     const valid = validate(list);
     if (valid.length === 0) return;
-    if (toolSlug) trackClientEvent("file_upload", { tool: toolSlug });
+    if (toolSlug) {
+      trackClientEvent("file_upload", { tool: toolSlug });
+      trackFileUpload(toolSlug, valid.length);
+    }
     onFilesChange(multiple ? [...files, ...valid] : [valid[0]]);
   }
 

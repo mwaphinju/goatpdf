@@ -75,7 +75,21 @@ export async function buildJobResponse(result: JobResult, toolId: string): Promi
     );
   }
 
-  const stats = await fs.stat(output.path);
+  let stats: Awaited<ReturnType<typeof fs.stat>>;
+  try {
+    stats = await fs.stat(output.path);
+  } catch {
+    // A processor reported success but its claimed output file isn't
+    // actually readable — a processor-side bug, not user input. Without this
+    // guard the exception would propagate uncaught out of the route handler
+    // and the workspace would never be cleaned up (the runProcessingJob
+    // failure path has already run and returned by this point).
+    await removeWorkspace(result.workspaceDir).catch(() => {});
+    return Response.json(
+      { code: "PROCESSING_FAILED", message: "Something went wrong while processing your file." },
+      { status: 500 },
+    );
+  }
 
   registerJobOutput(result.jobId, {
     filePath: output.path,

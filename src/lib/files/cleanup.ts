@@ -1,4 +1,5 @@
 import { listWorkspaces, removeWorkspace } from "@/lib/files/tempStorage";
+import { sweepExpiredJobOutputs } from "@/lib/processing/jobRegistry";
 
 export const JOB_TTL_MS = 60 * 60 * 1000; // 1 hour
 export const SWEEP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
@@ -31,6 +32,10 @@ export function startCleanupScheduler(intervalMs: number = SWEEP_INTERVAL_MS): v
     sweepExpiredWorkspaces().catch((error: unknown) => {
       console.error("[cleanup] sweep failed:", error instanceof Error ? error.message : error);
     });
+    // Same TTL as the workspace sweep above, so an abandoned job's registry
+    // entry (in-memory jobId -> output-file pointer) doesn't outlive the
+    // on-disk file it points to — see jobRegistry.ts's sweepExpiredJobOutputs.
+    sweepExpiredJobOutputs(JOB_TTL_MS);
   }, intervalMs);
 
   sweepIntervalHandle.unref?.();

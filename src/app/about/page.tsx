@@ -22,7 +22,7 @@ export default function AboutPage() {
         <ul className="flex list-disc flex-col gap-2 pl-5">
           {tools.map((tool) => (
             <li key={tool.slug}>
-              <Link href={`/tools/${tool.slug}`} className="font-medium text-emerald-700 hover:underline">
+              <Link href={`/tools/${tool.slug}`} className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
                 {tool.name}
               </Link>
               {" — "}
@@ -45,7 +45,7 @@ export default function AboutPage() {
         <p>
           Your file is uploaded to our server, processed by the tool you picked, and made available at a
           private, single-use download link. Files aren&apos;t kept afterward — see the{" "}
-          <Link href="/privacy" className="font-medium text-emerald-700 hover:underline">
+          <Link href="/privacy" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             Privacy Policy
           </Link>{" "}
           for the specifics of what&apos;s stored, for how long, and what&apos;s logged.
@@ -62,7 +62,7 @@ export default function AboutPage() {
       <LegalSection heading="Get in touch">
         <p>
           Found a bug, or have feedback? Visit the{" "}
-          <Link href="/contact" className="font-medium text-emerald-700 hover:underline">
+          <Link href="/contact" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             contact page
           </Link>
           .

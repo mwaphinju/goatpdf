@@ -126,9 +126,9 @@ export function SplitPdfTool() {
 
       {file && (
         <fieldset className="flex flex-col gap-3">
-          <legend className="text-sm font-medium text-slate-900">How should we split it?</legend>
+          <legend className="text-sm font-medium text-slate-900 dark:text-white">How should we split it?</legend>
 
-          <label className="flex items-start gap-2 text-sm text-slate-700">
+          <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <input
               type="radio"
               name="split-mode"
@@ -138,14 +138,14 @@ export function SplitPdfTool() {
               className="mt-1"
             />
             <span>
-              <span className="block font-medium text-slate-900">Split into individual pages</span>
-              <span className="block text-slate-500">
+              <span className="block font-medium text-slate-900 dark:text-white">Split into individual pages</span>
+              <span className="block text-slate-600 dark:text-slate-400">
                 Every page becomes its own PDF, delivered as a ZIP file.
               </span>
             </span>
           </label>
 
-          <label className="flex items-start gap-2 text-sm text-slate-700">
+          <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
             <input
               type="radio"
               name="split-mode"
@@ -156,8 +156,8 @@ export function SplitPdfTool() {
               className="mt-1"
             />
             <span>
-              <span className="block font-medium text-slate-900">Extract specific pages</span>
-              <span className="block text-slate-500">
+              <span className="block font-medium text-slate-900 dark:text-white">Extract specific pages</span>
+              <span className="block text-slate-600 dark:text-slate-400">
                 Choose which pages to keep, in one new PDF.
                 {pageCount === null && " (needs a readable page count)"}
               </span>
@@ -166,7 +166,7 @@ export function SplitPdfTool() {
 
           {mode === "ranges" && (
             <div className="ml-6 flex flex-col gap-1">
-              <label htmlFor="page-ranges" className="text-sm font-medium text-slate-700">
+              <label htmlFor="page-ranges" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                 Pages to extract
               </label>
               <input
@@ -175,15 +175,15 @@ export function SplitPdfTool() {
                 value={rangesInput}
                 onChange={(event) => setRangesInput(event.target.value)}
                 placeholder="e.g. 1-3, 5, 7-9"
-                className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-600 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500"
                 aria-invalid={rangesError ? true : undefined}
                 aria-describedby="page-ranges-hint"
               />
-              <p id="page-ranges-hint" className="text-xs text-slate-500">
+              <p id="page-ranges-hint" className="text-xs text-slate-600 dark:text-slate-400">
                 Separate pages or ranges with commas, e.g. 1-3, 5, 7-9.
               </p>
               {rangesError && (
-                <p role="alert" className="text-sm text-red-600">
+                <p role="alert" className="text-sm text-red-600 dark:text-red-400">
                   {rangesError}
                 </p>
               )}

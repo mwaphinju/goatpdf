@@ -105,27 +105,27 @@ export function CompressPdfTool() {
 
     return (
       <div className="flex flex-col gap-6">
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950">
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-4">
             <div>
-              <dt className="text-slate-500">Original size</dt>
-              <dd className="text-base font-semibold text-slate-900">{formatBytes(flow.originalSize)}</dd>
+              <dt className="text-slate-600 dark:text-slate-400">Original size</dt>
+              <dd className="text-base font-semibold text-slate-900 dark:text-white">{formatBytes(flow.originalSize)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Compressed size</dt>
-              <dd className="text-base font-semibold text-slate-900">{formatBytes(flow.compressedSize)}</dd>
+              <dt className="text-slate-600 dark:text-slate-400">Compressed size</dt>
+              <dd className="text-base font-semibold text-slate-900 dark:text-white">{formatBytes(flow.compressedSize)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Space saved</dt>
-              <dd className="text-base font-semibold text-slate-900">{formatBytes(spaceSaved)}</dd>
+              <dt className="text-slate-600 dark:text-slate-400">Space saved</dt>
+              <dd className="text-base font-semibold text-slate-900 dark:text-white">{formatBytes(spaceSaved)}</dd>
             </div>
             <div>
-              <dt className="text-slate-500">Reduction</dt>
-              <dd className="text-base font-semibold text-emerald-700">{percentReduction}%</dd>
+              <dt className="text-slate-600 dark:text-slate-400">Reduction</dt>
+              <dd className="text-base font-semibold text-emerald-700 dark:text-emerald-400">{percentReduction}%</dd>
             </div>
           </dl>
           {percentReduction === 0 && (
-            <p className="mt-4 text-sm text-slate-600">
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
               This PDF was already well optimized — we couldn&apos;t shrink it further without a real loss
               in quality, so we kept your original file intact.
             </p>
@@ -162,11 +162,11 @@ export function CompressPdfTool() {
 
       {file && (
         <fieldset className="flex flex-col gap-3">
-          <legend className="text-sm font-medium text-slate-900">Compression level</legend>
+          <legend className="text-sm font-medium text-slate-900 dark:text-white">Compression level</legend>
           {PRESET_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className="flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50"
+              className="flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 dark:border-slate-600 dark:text-slate-300 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950"
             >
               <input
                 type="radio"
@@ -177,8 +177,8 @@ export function CompressPdfTool() {
                 className="mt-1"
               />
               <span>
-                <span className="block font-medium text-slate-900">{option.label}</span>
-                <span className="block text-slate-500">{option.description}</span>
+                <span className="block font-medium text-slate-900 dark:text-white">{option.label}</span>
+                <span className="block text-slate-600 dark:text-slate-400">{option.description}</span>
               </span>
             </label>
           ))}

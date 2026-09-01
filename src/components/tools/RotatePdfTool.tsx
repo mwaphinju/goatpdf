@@ -128,12 +128,12 @@ export function RotatePdfTool() {
       {file && (
         <>
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-slate-900">Rotation angle</legend>
+            <legend className="text-sm font-medium text-slate-900 dark:text-white">Rotation angle</legend>
             <div className="flex gap-3">
               {ANGLES.map((value) => (
                 <label
                   key={value}
-                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50"
+                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 dark:border-slate-600 dark:text-slate-300 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950"
                 >
                   <input
                     type="radio"
@@ -149,9 +149,9 @@ export function RotatePdfTool() {
           </fieldset>
 
           <fieldset className="flex flex-col gap-3">
-            <legend className="text-sm font-medium text-slate-900">Which pages?</legend>
+            <legend className="text-sm font-medium text-slate-900 dark:text-white">Which pages?</legend>
 
-            <label className="flex items-start gap-2 text-sm text-slate-700">
+            <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
               <input
                 type="radio"
                 name="rotate-scope"
@@ -160,10 +160,10 @@ export function RotatePdfTool() {
                 onChange={() => setScope("all")}
                 className="mt-1"
               />
-              <span className="font-medium text-slate-900">Rotate every page</span>
+              <span className="font-medium text-slate-900 dark:text-white">Rotate every page</span>
             </label>
 
-            <label className="flex items-start gap-2 text-sm text-slate-700">
+            <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
               <input
                 type="radio"
                 name="rotate-scope"
@@ -173,9 +173,11 @@ export function RotatePdfTool() {
                 disabled={pageCount === null}
                 className="mt-1"
               />
-              <span className="font-medium text-slate-900">
+              <span className="font-medium text-slate-900 dark:text-white">
                 Choose specific pages
-                {pageCount === null && <span className="font-normal text-slate-500"> (needs a readable page count)</span>}
+                {pageCount === null && (
+                  <span className="font-normal text-slate-600 dark:text-slate-400"> (needs a readable page count)</span>
+                )}
               </span>
             </label>
 

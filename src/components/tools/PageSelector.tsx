@@ -39,17 +39,29 @@ export function PageSelector({ pageCount, selected, onChange, label }: PageSelec
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <span className="text-sm font-medium text-slate-900">
+        <span className="text-sm font-medium text-slate-900 dark:text-white">
           {label} — {selected.size} of {pageCount} selected
         </span>
         <div className="flex gap-3">
-          <button type="button" onClick={selectAll} className="text-xs font-medium text-emerald-700 hover:underline">
+          <button
+            type="button"
+            onClick={selectAll}
+            className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+          >
             Select all
           </button>
-          <button type="button" onClick={selectNone} className="text-xs font-medium text-emerald-700 hover:underline">
+          <button
+            type="button"
+            onClick={selectNone}
+            className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+          >
             Select none
           </button>
-          <button type="button" onClick={invertSelection} className="text-xs font-medium text-emerald-700 hover:underline">
+          <button
+            type="button"
+            onClick={invertSelection}
+            className="text-xs font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+          >
             Invert
           </button>
         </div>
@@ -69,7 +81,7 @@ export function PageSelector({ pageCount, selected, onChange, label }: PageSelec
                 "flex h-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors",
                 isSelected
                   ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-slate-300 bg-white text-slate-700 hover:border-emerald-400 hover:bg-slate-50",
+                  : "border-slate-300 bg-white text-slate-700 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-emerald-500 dark:hover:bg-slate-800",
               )}
             >
               {pageNumber}

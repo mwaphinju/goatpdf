@@ -112,19 +112,23 @@ export function UploadZone({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:p-12",
-          isDragging ? "border-emerald-500 bg-emerald-50" : "border-slate-300 hover:border-emerald-400 hover:bg-slate-50",
+          "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-500 sm:p-12",
+          isDragging
+            ? "border-emerald-500 bg-emerald-50 dark:border-emerald-500 dark:bg-emerald-950"
+            : "border-slate-300 hover:border-emerald-400 hover:bg-slate-50 dark:border-slate-600 dark:hover:border-emerald-500 dark:hover:bg-slate-800",
         )}
       >
-        <UploadIcon className="h-9 w-9 text-emerald-600" />
+        <UploadIcon className="h-9 w-9 text-emerald-600 dark:text-emerald-400" />
         <div>
-          <p className="font-medium text-slate-900">{label}</p>
-          <p className="mt-1 text-sm text-slate-500">
-            or <span className="font-medium text-emerald-700 underline">browse files</span> from your device
+          <p className="font-medium text-slate-900 dark:text-white">{label}</p>
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            or{" "}
+            <span className="font-medium text-emerald-700 underline dark:text-emerald-400">browse files</span> from
+            your device
           </p>
         </div>
         {hint && (
-          <p id={`${inputId}-hint`} className="text-xs text-slate-500">
+          <p id={`${inputId}-hint`} className="text-xs text-slate-600 dark:text-slate-400">
             {hint}
           </p>
         )}
@@ -143,7 +147,7 @@ export function UploadZone({
       </div>
 
       {error && (
-        <p role="alert" className="mt-2 text-sm text-red-600">
+        <p role="alert" className="mt-2 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       )}
@@ -153,18 +157,18 @@ export function UploadZone({
           {files.map((file, index) => (
             <li
               key={`${file.name}-${file.lastModified}-${index}`}
-              className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+              className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
             >
               <span className="flex min-w-0 items-center gap-2">
-                <FileIcon className="h-5 w-5 shrink-0 text-slate-400" />
-                <span className="truncate font-medium text-slate-700">{file.name}</span>
-                <span className="shrink-0 text-slate-500">{formatBytes(file.size)}</span>
+                <FileIcon className="h-5 w-5 shrink-0 text-slate-400 dark:text-slate-500" />
+                <span className="truncate font-medium text-slate-700 dark:text-slate-300">{file.name}</span>
+                <span className="shrink-0 text-slate-600 dark:text-slate-400">{formatBytes(file.size)}</span>
               </span>
               <button
                 type="button"
                 onClick={() => removeFile(index)}
                 aria-label={`Remove ${file.name}`}
-                className="shrink-0 rounded p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
+                className="shrink-0 rounded p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus-visible:outline-emerald-500"
               >
                 <XIcon className="h-4 w-4" />
               </button>

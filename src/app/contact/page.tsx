@@ -18,7 +18,7 @@ export default function ContactPage() {
 
       <LegalSection heading="Email">
         <p>
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-emerald-700 hover:underline">
+          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             {CONTACT_EMAIL}
           </a>
         </p>
@@ -29,7 +29,7 @@ export default function ContactPage() {
         <ul className="flex list-disc flex-col gap-2 pl-5">
           <li>A tool that produced a wrong or broken result.</li>
           <li>A bug or error message that didn&apos;t make sense.</li>
-          <li>A question about the <Link href="/privacy" className="font-medium text-emerald-700 hover:underline">Privacy Policy</Link> or <Link href="/terms" className="font-medium text-emerald-700 hover:underline">Terms of Service</Link>.</li>
+          <li>A question about the <Link href="/privacy" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">Privacy Policy</Link> or <Link href="/terms" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">Terms of Service</Link>.</li>
           <li>A copyright, abuse, or takedown report.</li>
           <li>General feedback or a tool you&apos;d like to see.</li>
         </ul>

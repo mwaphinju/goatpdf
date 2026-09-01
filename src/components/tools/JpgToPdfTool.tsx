@@ -129,11 +129,11 @@ export function JpgToPdfTool() {
       {files.length > 0 && (
         <>
           <fieldset className="flex flex-col gap-3">
-            <legend className="text-sm font-medium text-slate-900">Page size</legend>
+            <legend className="text-sm font-medium text-slate-900 dark:text-white">Page size</legend>
             {PAGE_SIZE_OPTIONS.map((option) => (
               <label
                 key={option.value}
-                className="flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50"
+                className="flex items-start gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 dark:border-slate-600 dark:text-slate-300 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950"
               >
                 <input
                   type="radio"
@@ -144,20 +144,20 @@ export function JpgToPdfTool() {
                   className="mt-1"
                 />
                 <span>
-                  <span className="block font-medium text-slate-900">{option.label}</span>
-                  <span className="block text-slate-500">{option.description}</span>
+                  <span className="block font-medium text-slate-900 dark:text-white">{option.label}</span>
+                  <span className="block text-slate-600 dark:text-slate-400">{option.description}</span>
                 </span>
               </label>
             ))}
           </fieldset>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-slate-900">Orientation</legend>
+            <legend className="text-sm font-medium text-slate-900 dark:text-white">Orientation</legend>
             <div className="flex gap-3">
               {(["portrait", "landscape"] as const).map((value) => (
                 <label
                   key={value}
-                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 capitalize has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:disabled]:opacity-40"
+                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 capitalize has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 has-[:disabled]:opacity-40 dark:border-slate-600 dark:text-slate-300 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950"
                 >
                   <input
                     type="radio"
@@ -174,12 +174,12 @@ export function JpgToPdfTool() {
           </fieldset>
 
           <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm font-medium text-slate-900">Margins</legend>
+            <legend className="text-sm font-medium text-slate-900 dark:text-white">Margins</legend>
             <div className="flex gap-3">
               {MARGIN_OPTIONS.map((option) => (
                 <label
                   key={option.value}
-                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50"
+                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50 dark:border-slate-600 dark:text-slate-300 dark:has-[:checked]:border-emerald-500 dark:has-[:checked]:bg-emerald-950"
                 >
                   <input
                     type="radio"

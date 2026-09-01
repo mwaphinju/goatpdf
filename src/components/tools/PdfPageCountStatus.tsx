@@ -13,10 +13,10 @@ export function PdfPageCountStatus({ file, pageCount, error, isReading }: PdfPag
 
   return (
     <>
-      {isReading && <p className="text-sm text-slate-500">Reading your PDF…</p>}
+      {isReading && <p className="text-sm text-slate-600 dark:text-slate-400">Reading your PDF…</p>}
 
       {pageCount !== null && (
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
           This PDF has <span className="font-medium">{pageCount}</span> page{pageCount === 1 ? "" : "s"}.
         </p>
       )}

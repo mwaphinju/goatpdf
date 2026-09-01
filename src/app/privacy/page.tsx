@@ -141,7 +141,7 @@ export default function PrivacyPage() {
       <LegalSection heading="Questions">
         <p>
           If you have a question about how your data is handled, see the{" "}
-          <Link href="/contact" className="font-medium text-emerald-700 hover:underline">
+          <Link href="/contact" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             contact page
           </Link>
           .

@@ -1,26 +1,20 @@
 @import "tailwindcss";
 
+/*
+ * color-scheme tells the browser this page genuinely supports both light and
+ * dark rendering, so it uses the real palette below for native UI (form
+ * controls, scrollbars) instead of guessing or force-inverting colors on its
+ * own — browsers/mobile OSes that auto-darken pages with no color-scheme
+ * declared are the root cause of GOAT PDF's dark-mode contrast bugs (see
+ * THEME_ACCESSIBILITY_AUDIT.md). Every actual color is still set explicitly
+ * via Tailwind's dark: variant (prefers-color-scheme-based by default, no
+ * theme switcher) on each component — this line only governs native browser
+ * chrome, not app content.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  color-scheme: light dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }

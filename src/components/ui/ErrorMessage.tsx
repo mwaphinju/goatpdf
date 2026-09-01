@@ -11,8 +11,8 @@ export interface ErrorMessageProps {
 export function ErrorMessage({ title, message, tone = "error", className }: ErrorMessageProps) {
   const toneClasses =
     tone === "error"
-      ? "border-red-200 bg-red-50 text-red-800"
-      : "border-amber-200 bg-amber-50 text-amber-900";
+      ? "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+      : "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200";
 
   return (
     <div

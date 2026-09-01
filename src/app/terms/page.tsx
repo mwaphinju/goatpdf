@@ -22,7 +22,7 @@ export default function TermsPage() {
           GOAT PDF provides free, browser-based tools for working with PDF files — compressing, merging,
           splitting, rotating, deleting pages, converting images to PDF, converting PDF pages to images,
           and converting PDF to Word. No account or payment is required to use any of them. See{" "}
-          <Link href="/privacy" className="font-medium text-emerald-700 hover:underline">
+          <Link href="/privacy" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             the Privacy Policy
           </Link>{" "}
           for exactly how your files are handled while a tool runs.
@@ -86,7 +86,7 @@ export default function TermsPage() {
       <LegalSection heading="Questions">
         <p>
           Questions about these terms can be sent through the{" "}
-          <Link href="/contact" className="font-medium text-emerald-700 hover:underline">
+          <Link href="/contact" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
             contact page
           </Link>
           .

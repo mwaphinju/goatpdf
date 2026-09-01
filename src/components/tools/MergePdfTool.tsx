@@ -107,7 +107,7 @@ export function MergePdfTool() {
       <ReorderableFileList files={files} onChange={setFiles} label="Files to merge, in order" />
 
       {files.length > 0 && files.length < MIN_FILES && (
-        <p className="text-sm text-slate-500">Add at least {MIN_FILES} PDF files to merge.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">Add at least {MIN_FILES} PDF files to merge.</p>
       )}
 
       {flow.status === "error" && <ErrorMessage message={flow.message} />}

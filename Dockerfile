@@ -26,8 +26,14 @@ ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_GA_MEASUREMENT_ID
 ENV NEXT_PUBLIC_GA_MEASUREMENT_ID=$NEXT_PUBLIC_GA_MEASUREMENT_ID
 
+# --fetch-retries: npm's default (2) wasn't enough to survive a real,
+# observed mid-download ECONNRESET during this install (a large package like
+# next's own dist tree is a multi-hundred-MB download) — same reasoning as
+# apt-get's Acquire::Retries below. The `||` fallback is a second, cheap
+# layer: if every fetch-retry attempt is exhausted, retry the whole install
+# once more rather than fail the build outright.
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --fetch-retries=5 --fetch-retry-maxtimeout=120000 || npm ci --fetch-retries=5 --fetch-retry-maxtimeout=120000
 
 COPY . .
 RUN npm run build
@@ -75,8 +81,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends -o Acquire::Ret
 # this app's overall security posture (see next.config.ts's headers()).
 RUN groupadd --system goatpdf && useradd --system --gid goatpdf --create-home goatpdf
 
+# Same fetch-retries/fallback reasoning as the builder stage's npm ci above.
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --fetch-retries=5 --fetch-retry-maxtimeout=120000 || npm ci --omit=dev --fetch-retries=5 --fetch-retry-maxtimeout=120000
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public

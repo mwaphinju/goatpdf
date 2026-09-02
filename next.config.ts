@@ -74,6 +74,21 @@ const nextConfig: NextConfig = {
   // runtime. Both must stay external and be require()'d directly from
   // node_modules instead of being bundled.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
+  // /pdf-to-word has never been a real route — every tool page has always
+  // lived at /tools/<slug> (see src/app/tools/*), consistent with sitemap.ts,
+  // robots.ts, and every internal link in the app. This redirect exists only
+  // because that bare URL was reported as expected to work (e.g. someone
+  // linked or typed it without the /tools/ prefix) — it does not change the
+  // real route, which is unaffected.
+  async redirects() {
+    return [
+      {
+        source: "/pdf-to-word",
+        destination: "/tools/pdf-to-word",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       // Applied to every route (pages and API alike) — there is no cross-origin

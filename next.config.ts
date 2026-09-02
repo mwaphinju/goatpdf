@@ -74,20 +74,33 @@ const nextConfig: NextConfig = {
   // runtime. Both must stay external and be require()'d directly from
   // node_modules instead of being bundled.
   serverExternalPackages: ["@napi-rs/canvas", "pdfjs-dist"],
-  // /pdf-to-word has never been a real route — every tool page has always
-  // lived at /tools/<slug> (see src/app/tools/*), consistent with sitemap.ts,
-  // robots.ts, and every internal link in the app. This redirect exists only
-  // because that bare URL was reported as expected to work (e.g. someone
-  // linked or typed it without the /tools/ prefix) — it does not change the
-  // real route, which is unaffected.
+  // None of these bare slugs have ever been real routes — every tool page
+  // has always lived at /tools/<slug> (see src/app/tools/*), consistent with
+  // sitemap.ts, robots.ts, and every internal link in the app. These
+  // redirects exist only because the bare URLs were expected to work (e.g.
+  // linked or typed without the /tools/ prefix elsewhere) — they don't change
+  // any real route. Kept as a plain literal list (not imported from
+  // lib/tools.ts) because next.config.ts loads before the app's normal
+  // module/JSX pipeline is set up, so pulling in tools.ts's icon-component
+  // imports here is an avoidable risk for what's just a static list — keep
+  // this in sync with lib/tools.ts's slugs if a tool is ever renamed/added.
   async redirects() {
-    return [
-      {
-        source: "/pdf-to-word",
-        destination: "/tools/pdf-to-word",
-        permanent: true,
-      },
+    const toolSlugs = [
+      "compress-pdf",
+      "merge-pdf",
+      "split-pdf",
+      "rotate-pdf",
+      "delete-pdf-pages",
+      "jpg-to-pdf",
+      "pdf-to-jpg",
+      "pdf-to-word",
     ];
+
+    return toolSlugs.map((slug) => ({
+      source: `/${slug}`,
+      destination: `/tools/${slug}`,
+      permanent: true,
+    }));
   },
   async headers() {
     return [

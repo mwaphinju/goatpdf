@@ -19,8 +19,22 @@ export interface ToolDefinition {
   slug: string;
   name: string;
   shortName: string;
-  /** Short, one-sentence blurb — used as the homepage/footer card text and the page's meta description. */
+  /** Short, one-sentence blurb — used as the homepage/footer card text (on-page UI copy, not SEO metadata — see metaDescription). */
   description: string;
+  /**
+   * The <title> tag's content (before the root layout's "%s — GOAT PDF"
+   * template appends the brand suffix) — distinct from `name`, which stays
+   * the on-page H1/nav/card label. Written for search intent ("online
+   * free"), not as a UI label, so the two can diverge without changing
+   * anything visible on the page itself.
+   */
+  seoTitle: string;
+  /** The <meta name="description"> content — distinct from `description` (the on-page card blurb) so search-result copy can be optimized without changing visible UI text. */
+  metaDescription: string;
+  /** A one-line, factual statement of accepted input / produced output formats, derived from what the tool actually accepts (see `accept`) — shown on the tool page for both users and crawlers. */
+  supportedFormats: string;
+  /** 2-3 genuine, concrete scenarios this tool actually solves — shown in a short "Common use cases" section. Not generic filler; each one ties to real functionality. */
+  useCases: string[];
   /** Longer, on-page introduction paragraph — distinct wording from `description`, shown as real page content. */
   intro: string;
   /** Ordered steps shown in a "How to..." section on the tool's page. */
@@ -41,6 +55,15 @@ export const tools: ToolDefinition[] = [
     name: "Compress PDF",
     shortName: "Compress",
     description: "Reduce PDF file size while keeping quality as high as possible.",
+    seoTitle: "Compress PDF Online Free",
+    metaDescription:
+      "Compress PDF files online for free. Reduce file size while preserving quality — no sign-up, no watermark, and files are deleted automatically after processing.",
+    supportedFormats: "PDF in, PDF out.",
+    useCases: [
+      "Getting a scanned document under an email attachment size limit",
+      "Shrinking a PDF before uploading it to a form or portal with a size cap",
+      "Reducing storage space for a large PDF archive",
+    ],
     intro:
       "Shrink a PDF's file size without wrecking the quality of what's inside. GOAT PDF re-encodes the embedded images in your file at the compression level you choose, then reports exactly how much space you saved — never a made-up percentage.",
     howTo: [
@@ -71,6 +94,15 @@ export const tools: ToolDefinition[] = [
     name: "Merge PDF",
     shortName: "Merge",
     description: "Combine multiple PDF files into a single document.",
+    seoTitle: "Merge PDF Files Online Free",
+    metaDescription:
+      "Merge PDF files online for free. Combine multiple PDFs into one document in any order you choose — fast, private, and no account required.",
+    supportedFormats: "PDF in, PDF out.",
+    useCases: [
+      "Combining multiple scanned pages into one document",
+      "Assembling a report from separate PDF sections",
+      "Merging an invoice with its supporting attachments into one file",
+    ],
     intro:
       "Combine two or more PDF files into a single document, in whatever order you choose. Add files, drag them into place, and merge — no watermark on the result.",
     howTo: [
@@ -100,6 +132,15 @@ export const tools: ToolDefinition[] = [
     name: "Split PDF",
     shortName: "Split",
     description: "Extract or separate pages from a PDF into new files.",
+    seoTitle: "Split PDF Online Free",
+    metaDescription:
+      "Split a PDF online for free. Extract specific pages or break a PDF into individual files in seconds — no software to install.",
+    supportedFormats: "PDF in, PDF or ZIP out.",
+    useCases: [
+      "Pulling a single chapter or section out of a long PDF",
+      "Separating a multi-invoice PDF into individual invoices",
+      "Extracting one page to send instead of an entire document",
+    ],
     intro:
       "Break a PDF apart — either into one file per page, or by extracting a specific range of pages into a new document. Useful for pulling a single chapter, invoice, or form out of a longer file.",
     howTo: [
@@ -129,6 +170,15 @@ export const tools: ToolDefinition[] = [
     name: "Rotate PDF",
     shortName: "Rotate",
     description: "Fix sideways or upside-down pages in seconds.",
+    seoTitle: "Rotate PDF Pages Online Free",
+    metaDescription:
+      "Rotate PDF pages online for free. Fix sideways or upside-down pages instantly, for an entire document or just the pages you choose.",
+    supportedFormats: "PDF in, PDF out.",
+    useCases: [
+      "Fixing pages scanned in the wrong orientation",
+      "Correcting a photo-to-PDF conversion that came out sideways",
+      "Straightening just a few pages in an otherwise correct document",
+    ],
     intro:
       "Fix pages that were scanned sideways or upside down. Rotate an entire PDF by 90°, 180°, or 270°, or pick just the pages that actually need it.",
     howTo: [
@@ -159,6 +209,15 @@ export const tools: ToolDefinition[] = [
     name: "Delete PDF Pages",
     shortName: "Delete Pages",
     description: "Remove unwanted pages from a PDF document.",
+    seoTitle: "Delete PDF Pages Online Free",
+    metaDescription:
+      "Delete pages from a PDF online for free. Remove unwanted pages in seconds while keeping the rest of your document intact.",
+    supportedFormats: "PDF in, PDF out.",
+    useCases: [
+      "Removing a blank cover sheet added by a scanner",
+      "Deleting an outdated page before resending a document",
+      "Trimming a duplicate scan from a multi-page PDF",
+    ],
     intro:
       "Remove specific pages from a PDF — a blank cover sheet, a duplicate scan, an outdated section — without touching the rest of the document.",
     howTo: [
@@ -188,6 +247,15 @@ export const tools: ToolDefinition[] = [
     name: "JPG to PDF",
     shortName: "JPG to PDF",
     description: "Turn JPG or PNG images into a single PDF document.",
+    seoTitle: "Convert JPG to PDF Online Free",
+    metaDescription:
+      "Convert JPG or PNG images to PDF online for free. Combine multiple images into a single PDF with your choice of page size and layout.",
+    supportedFormats: "JPG or PNG in, PDF out.",
+    useCases: [
+      "Turning photographed receipts into a single PDF for an expense report",
+      "Converting a stack of phone-scanned pages into one document",
+      "Combining screenshots into a shareable PDF",
+    ],
     intro:
       "Turn one or more JPG or PNG images into a single PDF — scanned receipts, photos of a whiteboard, a stack of pages photographed with your phone. Choose the page size, orientation, and margin, and control the order images appear in.",
     howTo: [
@@ -217,6 +285,15 @@ export const tools: ToolDefinition[] = [
     name: "PDF to JPG",
     shortName: "PDF to JPG",
     description: "Convert each PDF page into a JPG image.",
+    seoTitle: "Convert PDF to JPG Online Free",
+    metaDescription:
+      "Convert PDF pages to JPG images online for free. Turn any page — or every page — into a high-quality image in seconds.",
+    supportedFormats: "PDF in, JPG or ZIP out.",
+    useCases: [
+      "Getting a page as an image to paste into a slideshow or document",
+      "Sharing a document on a platform that only accepts images",
+      "Generating a quick visual preview of a page's contents",
+    ],
     intro:
       "Convert PDF pages into JPG images — useful for pulling a single page into a slideshow, sharing a document on a platform that only accepts images, or grabbing a quick preview of a page's contents.",
     howTo: [
@@ -247,6 +324,15 @@ export const tools: ToolDefinition[] = [
     name: "PDF to Word",
     shortName: "PDF to Word",
     description: "Convert a PDF into an editable Word document.",
+    seoTitle: "PDF to Word Converter Online Free",
+    metaDescription:
+      "Convert PDF to an editable Word document online for free. Get a downloadable .docx file you can actually edit — no account required.",
+    supportedFormats: "PDF in, DOCX out.",
+    useCases: [
+      "Editing the text of a PDF you no longer have the source file for",
+      "Updating a contract or form template originally received as a PDF",
+      "Reusing content from a PDF report in a new Word document",
+    ],
     intro:
       "Convert a PDF into an editable Word document (.docx), so you can update text, tables, and formatting instead of starting from scratch. Conversion quality depends on how complex the original PDF is.",
     howTo: [

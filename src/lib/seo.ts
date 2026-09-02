@@ -58,7 +58,11 @@ export function buildPageMetadata({
 export function buildToolMetadata(tool: ToolDefinition): Metadata {
   return buildPageMetadata({
     path: `/tools/${tool.slug}`,
-    title: tool.name,
-    description: tool.description,
+    // seoTitle/metaDescription are written for search intent and result-page
+    // copy specifically — distinct from tool.name/description, which stay
+    // the on-page H1 and card text, so this never changes anything visible
+    // in the UI.
+    title: tool.seoTitle,
+    description: tool.metaDescription,
   });
 }

@@ -34,9 +34,12 @@ describe("toolListStructuredData", () => {
 });
 
 describe("toolSoftwareApplicationStructuredData", () => {
-  it("builds a free-offer SoftwareApplication entry for the given tool", () => {
+  it("builds a free-offer WebApplication entry for the given tool", () => {
     const data = toolSoftwareApplicationStructuredData(mergeTool);
-    expect(data["@type"]).toBe("SoftwareApplication");
+    // WebApplication (not the more generic SoftwareApplication) — this tool
+    // runs entirely in the browser, nothing to install.
+    expect(data["@type"]).toBe("WebApplication");
+    expect(data.applicationCategory).toBe("UtilitiesApplication");
     expect(data.url).toBe(`${SITE_URL}/tools/merge-pdf`);
     expect(data.description).toBe(mergeTool.description);
     expect(data.offers).toEqual({ "@type": "Offer", price: "0", priceCurrency: "USD" });

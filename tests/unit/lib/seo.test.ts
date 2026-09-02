@@ -53,7 +53,10 @@ describe("buildToolMetadata", () => {
     const metadata = buildToolMetadata(tool);
 
     expect(metadata.alternates).toEqual({ canonical: "/tools/compress-pdf" });
-    expect(metadata.title).toBe(tool.name);
-    expect(metadata.description).toBe(tool.description);
+    // Uses the SEO-specific seoTitle/metaDescription, not the on-page
+    // name/description — search-result copy can be tuned for intent
+    // ("online free") without touching anything visible in the UI.
+    expect(metadata.title).toBe(tool.seoTitle);
+    expect(metadata.description).toBe(tool.metaDescription);
   });
 });

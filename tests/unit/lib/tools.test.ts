@@ -27,6 +27,31 @@ describe("tools registry", () => {
       expect(tool.faqs.length).toBeGreaterThanOrEqual(1);
     }
   });
+
+  it("gives every tool a distinct, non-empty seoTitle and metaDescription, separate from its on-page name/description", () => {
+    const seoTitles = new Set<string>();
+    const metaDescriptions = new Set<string>();
+
+    for (const tool of tools) {
+      expect(tool.seoTitle.length).toBeGreaterThan(0);
+      expect(tool.metaDescription.length).toBeGreaterThan(0);
+      seoTitles.add(tool.seoTitle);
+      metaDescriptions.add(tool.metaDescription);
+    }
+
+    expect(seoTitles.size).toBe(tools.length);
+    expect(metaDescriptions.size).toBe(tools.length);
+  });
+
+  it("gives every tool a supportedFormats statement and at least 2 concrete use cases", () => {
+    for (const tool of tools) {
+      expect(tool.supportedFormats.length).toBeGreaterThan(0);
+      expect(tool.useCases.length).toBeGreaterThanOrEqual(2);
+      for (const useCase of tool.useCases) {
+        expect(useCase.length).toBeGreaterThan(0);
+      }
+    }
+  });
 });
 
 describe("getToolBySlug", () => {

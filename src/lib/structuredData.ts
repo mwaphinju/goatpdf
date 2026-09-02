@@ -25,14 +25,19 @@ export function toolListStructuredData() {
   };
 }
 
+// WebApplication (a schema.org subtype of SoftwareApplication, specific to
+// browser-delivered apps) is the more accurate type for a tool that runs
+// entirely as a web page — there's nothing to install, which
+// applicationCategory: "UtilitiesApplication" also reflects more precisely
+// than the previous "BusinessApplication".
 export function toolSoftwareApplicationStructuredData(tool: ToolDefinition) {
   return {
     "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
+    "@type": "WebApplication",
     name: `${tool.name} — ${SITE_NAME}`,
     description: tool.description,
     url: absoluteUrl(`/tools/${tool.slug}`),
-    applicationCategory: "BusinessApplication",
+    applicationCategory: "UtilitiesApplication",
     operatingSystem: "Any (browser-based)",
     offers: {
       "@type": "Offer",

@@ -30,7 +30,13 @@ export function ToolPageLayout({ tool, children }: { tool: ToolDefinition; child
         <div className="mt-8">{children}</div>
 
         <div className="mt-16 flex flex-col gap-10 border-t border-slate-200 pt-10 text-left dark:border-slate-800">
-          <p className="leading-relaxed text-slate-700 dark:text-slate-300">{tool.intro}</p>
+          <div>
+            <p className="leading-relaxed text-slate-700 dark:text-slate-300">{tool.intro}</p>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+              <span className="font-medium text-slate-700 dark:text-slate-300">Supported formats:</span>{" "}
+              {tool.supportedFormats}
+            </p>
+          </div>
 
           <section>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">How it works</h2>
@@ -45,6 +51,22 @@ export function ToolPageLayout({ tool, children }: { tool: ToolDefinition; child
               ))}
             </ol>
           </section>
+
+          {tool.useCases.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Common use cases</h2>
+              <ul className="mt-3 flex flex-col gap-2">
+                {tool.useCases.map((useCase) => (
+                  <li key={useCase} className="flex gap-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                    <span aria-hidden className="text-emerald-600 dark:text-emerald-400">
+                      •
+                    </span>
+                    <span>{useCase}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {tool.faqs.length > 0 && (
             <section>

@@ -36,6 +36,12 @@ export const metadata: Metadata = {
     default: "GOAT PDF — Free PDF Tools That Just Work",
     template: "%s — GOAT PDF",
   },
+  // Google Search Console HTML-tag domain verification. Set once here (the
+  // root layout) rather than per-page, since Next merges unset metadata
+  // fields down from the root, so this renders in <head> on every page.
+  verification: {
+    google: "FbGjH3iTfA12p2KIjWzm7PKhp-QXlYXeXGfRqKtEBF8",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

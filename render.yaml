@@ -2,16 +2,26 @@
 #
 # Lets Render deploy this repo's Dockerfile directly (New > Blueprint in the
 # Render dashboard, pointed at this repo) instead of clicking through the
-# same options by hand. Uses the free plan per the user's explicit choice —
-# see DEPLOYMENT.md for the real caveat: Render's free web services are
-# 512MB RAM / 0.1 CPU, which may be tight for LibreOffice conversions and
-# image rendering under real load. If PDF to Word / PDF to JPG time out or
-# OOM in practice, upgrading `plan` below to `starter` is the fix.
+# same options by hand.
+#
+# Upgraded from `free` to `pro` (2026-09-03) after the free plan's idle
+# spin-down was directly observed causing real downtime — Render's runtime
+# logs showed the process getting SIGTERM'd after ~15 minutes idle and
+# taking ~80s to cold-restart on the next request. That gap is the most
+# likely explanation for a Google Search Console "Blocked by robots.txt"
+# result that persisted across a live re-test: a crawl request landing
+# inside that restart window gets a connection failure, and Google's
+# documented fallback for an unreachable robots.txt is to treat the whole
+# site as disallowed. `pro` doesn't idle-spin-down, which removes that
+# failure window entirely. IMPORTANT: this field is the source of truth if
+# Render ever re-syncs this service from the Blueprint — if it's ever
+# reverted to `free` here, a sync would silently downgrade the live service
+# back to the plan that caused this.
 services:
   - name: goatpdf
     type: web
     runtime: docker
-    plan: free
+    plan: pro
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /

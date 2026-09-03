@@ -43,15 +43,15 @@ export function parsePageRanges(input: string, pageCount: number): PageRangesRes
     const end = match[2] !== undefined ? Number(match[2]) : start;
 
     if (start < 1 || end < 1) {
-      return { ok: false, error: `"${token}" — page numbers start at 1.` };
+      return { ok: false, error: `"${token}": page numbers start at 1.` };
     }
     if (start > end) {
-      return { ok: false, error: `"${token}" — the start page can't be greater than the end page.` };
+      return { ok: false, error: `"${token}": the start page can't be greater than the end page.` };
     }
     if (end > pageCount) {
       return {
         ok: false,
-        error: `"${token}" — this PDF only has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
+        error: `"${token}": this PDF only has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
       };
     }
 

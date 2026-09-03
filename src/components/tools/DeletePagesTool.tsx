@@ -72,7 +72,7 @@ export function DeletePagesTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error — please check your connection and try again.",
+        message: "Network error. Please check your connection and try again.",
       });
     }
   }
@@ -126,7 +126,7 @@ export function DeletePagesTool() {
       {deletingEverything && (
         <ErrorMessage
           tone="info"
-          message="You can't delete every page — deselect at least one to keep."
+          message="You can't delete every page. Deselect at least one to keep."
         />
       )}
 

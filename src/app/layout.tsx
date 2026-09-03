@@ -22,19 +22,19 @@ const geistMono = Geist_Mono({
 });
 
 const DESCRIPTION =
-  "Compress, merge, split and convert PDF files online — quickly and easily. Free, private, no account required.";
+  "Compress, merge, split and convert PDF files online, quickly and easily. Free, private, no account required.";
 
 export const metadata: Metadata = {
-  // buildPageMetadata appends " — GOAT PDF" to whatever title it's given
-  // (for openGraph/twitter's title, e.g. "Merge PDF — GOAT PDF"), so the
+  // buildPageMetadata appends " | GOAT PDF" to whatever title it's given
+  // (for openGraph/twitter's title, e.g. "Merge PDF | GOAT PDF"), so the
   // homepage passes just the tagline here and overrides the real <title>
-  // separately below to the full "GOAT PDF — ..." form every other page's
-  // "%s — GOAT PDF" template also produces.
+  // separately below to the full "GOAT PDF | ..." form every other page's
+  // "%s | GOAT PDF" template also produces.
   ...buildPageMetadata({ path: "/", title: "Free PDF Tools That Just Work", description: DESCRIPTION }),
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "GOAT PDF — Free PDF Tools That Just Work",
-    template: "%s — GOAT PDF",
+    default: "GOAT PDF: Free PDF Tools That Just Work",
+    template: "%s | GOAT PDF",
   },
   // Google Search Console HTML-tag domain verification. Set once here (the
   // root layout) rather than per-page, since Next merges unset metadata

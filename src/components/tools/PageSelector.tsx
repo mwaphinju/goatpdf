@@ -40,7 +40,7 @@ export function PageSelector({ pageCount, selected, onChange, label }: PageSelec
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <span className="text-sm font-medium text-slate-900 dark:text-white">
-          {label} — {selected.size} of {pageCount} selected
+          {label}: {selected.size} of {pageCount} selected
         </span>
         <div className="flex gap-3">
           <button

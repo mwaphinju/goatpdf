@@ -236,6 +236,28 @@ Each tool's UI page and its `lib/pdf/*` function should be independently underst
 
 ---
 
+## User-facing writing style
+
+Never use the Unicode em dash character (U+2014, `—`) in GOAT PDF user-facing content. This applies to:
+
+- page copy (headings, paragraphs, list items)
+- metadata (`<title>`, meta descriptions, canonical/OG/Twitter text)
+- structured-data strings (JSON-LD `Article`, `WebSite`, `WebApplication`, `BreadcrumbList`, `FAQPage`, etc.)
+- FAQs, blog/guide articles, tool descriptions, "why use it" and "how it works" copy
+- buttons, CTAs, helper text, and error/validation messages shown to users
+- accessibility text (`alt`, `aria-label`)
+- legal/marketing copy (Privacy Policy, Terms of Service, About, Contact)
+
+Use natural alternatives instead: a comma, period, colon, semicolon, parentheses, or a normal hyphen, whichever reads most naturally for that specific sentence. Don't mechanically substitute the same punctuation mark everywhere; read the sentence and pick what sounds right. Don't add awkward phrasing solely to avoid the character.
+
+This rule does not apply to internal code comments (`//`, `/** */`), which are never rendered to a user. Leave existing comments as-is; only touch a comment's dash if you are already editing that line for another reason, or the comment has become factually stale.
+
+Before completing any content-related task, search the files you touched for the literal `—` character (use the `Grep` tool; shell `grep`'s Unicode handling has proven unreliable in this environment) and confirm zero occurrences in user-facing content.
+
+A lightweight automated check enforces this: `npm run check:em-dash` (see `scripts/check-em-dash.mjs`) scans `src/app`, `src/components`, and `src/lib` for the character outside code comments and fails with the offending file/line if found.
+
+---
+
 ## Security requirements (non-negotiable)
 
 - **Never expose uploaded or generated files publicly.** Files are only reachable through a per-job download route tied to a random job ID — never served from a public static directory.

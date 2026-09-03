@@ -37,7 +37,7 @@ export function usePdfPageCount(file: File | null): PdfPageCountState {
         if (!cancelled) setPageCount(doc.getPageCount());
       } catch {
         if (!cancelled) {
-          setError("We couldn't read this PDF's page count — it may be corrupted or password protected.");
+          setError("We couldn't read this PDF's page count. It may be corrupted or password protected.");
         }
       } finally {
         if (!cancelled) setIsReading(false);

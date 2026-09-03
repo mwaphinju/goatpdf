@@ -24,7 +24,7 @@ export function resolveSelectedPages(
   for (const pageNumber of uniquePages) {
     if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pageCount) {
       throw new InvalidOptionsError(
-        `Page ${pageNumber} doesn't exist — this PDF has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
+        `Page ${pageNumber} doesn't exist. This PDF has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
       );
     }
   }

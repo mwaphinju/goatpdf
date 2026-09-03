@@ -8,7 +8,7 @@ export function websiteStructuredData() {
     name: SITE_NAME,
     url: SITE_URL,
     description:
-      "Free, fast, mobile-friendly PDF tools — compress, merge, split, rotate, delete pages, and convert PDFs. No account required.",
+      "Free, fast, mobile-friendly PDF tools: compress, merge, split, rotate, delete pages, and convert PDFs. No account required.",
   };
 }
 
@@ -34,7 +34,7 @@ export function toolSoftwareApplicationStructuredData(tool: ToolDefinition) {
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
-    name: `${tool.name} — ${SITE_NAME}`,
+    name: `${tool.name} | ${SITE_NAME}`,
     description: tool.description,
     url: absoluteUrl(`/tools/${tool.slug}`),
     applicationCategory: "UtilitiesApplication",

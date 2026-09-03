@@ -78,7 +78,7 @@ export function Footer() {
       </div>
 
       <div className="flex flex-col items-center gap-2 border-t border-slate-200 px-4 py-5 text-center text-xs text-slate-600 sm:px-6 dark:border-slate-800 dark:text-slate-400">
-        <p>© {year} GOAT PDF. All processing happens automatically — no files are stored longer than necessary.</p>
+        <p>© {year} GOAT PDF. All processing happens automatically. No files are stored longer than necessary.</p>
         <div className="flex gap-4">
           <Link href="/privacy" className="hover:text-emerald-700 dark:hover:text-emerald-400">
             Privacy

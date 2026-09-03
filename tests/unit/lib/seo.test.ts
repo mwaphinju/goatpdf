@@ -24,7 +24,7 @@ describe("buildPageMetadata", () => {
     expect(metadata.title).toBe("Terms");
     expect(metadata.description).toBe("The terms.");
     expect(metadata.openGraph).toMatchObject({
-      title: "Terms — GOAT PDF",
+      title: "Terms | GOAT PDF",
       description: "The terms.",
       url: "/terms",
       siteName: "GOAT PDF",
@@ -32,7 +32,7 @@ describe("buildPageMetadata", () => {
     });
     expect(metadata.twitter).toMatchObject({
       card: "summary_large_image",
-      title: "Terms — GOAT PDF",
+      title: "Terms | GOAT PDF",
       description: "The terms.",
     });
   });

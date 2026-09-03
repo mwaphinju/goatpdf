@@ -14,14 +14,14 @@ export default function PrivacyPage() {
     <LegalPageLayout title="Privacy Policy" updated="August 31, 2026">
       <p>
         GOAT PDF is built to need as little of your data as possible. There are no accounts, no sign-up,
-        and no profile tied to you — you upload a file, a tool processes it, and you download the result.
+        and no profile tied to you: you upload a file, a tool processes it, and you download the result.
         This page describes, as accurately as we can, exactly what happens to your file and your data in
         between.
       </p>
 
       <LegalSection heading="How your files are handled">
         <p>
-          When you use a tool, your file is uploaded to our server and processed there — PDF tools need
+          When you use a tool, your file is uploaded to our server and processed there. PDF tools need
           real processing (page manipulation, image re-encoding, document conversion) that can&apos;t be
           done reliably in a browser alone. While a job is running, your file is stored in a private,
           temporary folder on the server, named with a randomly generated identifier rather than anything
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           That folder is never publicly listed or browsable. The only way to retrieve a result is through
-          a single-use download link tied to that random job — once you download it, the link stops
+          a single-use download link tied to that random job. Once you download it, the link stops
           working and the underlying file is deleted. Nobody else can guess or reuse your link.
         </p>
         <p>No one manually views, reviews, or inspects your files. They are not used to train any model.</p>
@@ -38,14 +38,14 @@ export default function PrivacyPage() {
       <LegalSection heading="When your files are deleted">
         <p>
           Uploaded and generated files are deleted immediately after a successful download, on a
-          best-effort basis. As a backstop for files that are never downloaded — an abandoned upload, a
-          closed browser tab, a failed job — an automatic cleanup sweep runs every 15 minutes and removes
+          best-effort basis. As a backstop for files that are never downloaded (an abandoned upload, a
+          closed browser tab, a failed job), an automatic cleanup sweep runs every 15 minutes and removes
           any temporary job folder older than 1 hour. In practice, that means a file that&apos;s never
           downloaded is removed within roughly an hour, and never later than about 75 minutes.
         </p>
         <p>
           We don&apos;t keep backups of uploaded or generated files, and there is no database of past
-          jobs — once a file is deleted, it&apos;s gone.
+          jobs. Once a file is deleted, it&apos;s gone.
         </p>
       </LegalSection>
 
@@ -58,14 +58,14 @@ export default function PrivacyPage() {
           <li>No OCR, no AI features, and files are never used to train a model.</li>
         </ul>
         <p>
-          If that ever changes — for example, if we add advertising in the future — this policy will be
+          If that ever changes (for example, if we add advertising in the future), this policy will be
           updated first, and it will continue to describe accurately what is and isn&apos;t collected.
         </p>
       </LegalSection>
 
       <LegalSection heading="Analytics">
         <p>
-          GOAT PDF can optionally record a small set of usage events — the operator running this site
+          GOAT PDF can optionally record a small set of usage events: the operator running this site
           turns this on or off with a server setting, and it is <strong>off by default</strong>. When it&apos;s
           off, none of this section applies: nothing is measured, logged, or sent anywhere.
         </p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
         </ul>
         <p>
           That&apos;s the complete list. Every event is just a name, an optional tool name, and an optional
-          page path — never a filename, never file contents, never anything read from inside your PDF or
+          page path, never a filename, never file contents, never anything read from inside your PDF or
           images. There is no cookie and no persistent identifier of any kind attached to these events, and
           nothing links two events together as coming from &quot;the same person.&quot;
         </p>
@@ -87,10 +87,10 @@ export default function PrivacyPage() {
           These events never go straight from your browser to a third party. A page/tool view or a file
           add is first sent to GOAT PDF&apos;s own server; the server then decides, based on its own
           configuration, whether to also forward that event to an analytics collector the operator has set
-          up themselves (for example, a self-hosted, privacy-focused analytics tool) — or to just record it
+          up themselves (for example, a self-hosted, privacy-focused analytics tool), or to just record it
           in the server&apos;s own logs and go no further. If forwarding is configured, your IP address is
           passed along with that one request only, so the receiving analytics tool can count unique
-          visitors the same privacy-conscious way it would if it were embedded directly in the page — it is
+          visitors the same privacy-conscious way it would if it were embedded directly in the page. It is
           not stored by GOAT PDF itself, logged, or linked to any file.
         </p>
       </LegalSection>
@@ -98,10 +98,10 @@ export default function PrivacyPage() {
       <LegalSection heading="What we log">
         <p>
           Our server logs are deliberately narrow. For each job, we log a job ID (the same random
-          identifier used for the temp folder — not derived from your file), which tool was used, whether
+          identifier used for the temp folder, not derived from your file), which tool was used, whether
           it started, succeeded, failed, or timed out, a general error category if something went wrong,
           and how long processing took. Log entries structurally cannot include file contents, extracted
-          text, or the filename you uploaded — the logging code only accepts that narrow set of fields, so
+          text, or the filename you uploaded. The logging code only accepts that narrow set of fields, so
           there isn&apos;t a path for file data to end up in a log by mistake.
         </p>
       </LegalSection>
@@ -110,7 +110,7 @@ export default function PrivacyPage() {
         <p>
           To keep the processing tools available and stop scripted abuse, requests are rate-limited per IP
           address. The IP address used for this is read from the request and held only in an in-memory
-          counter — it is not written to disk, not stored in a database, and not linked to any file you
+          counter. It is not written to disk, not stored in a database, and not linked to any file you
           upload. Those counters are cleared automatically as they expire, and reset completely if the
           server restarts.
         </p>
@@ -130,7 +130,7 @@ export default function PrivacyPage() {
       <LegalSection heading="Being honest about limits">
         <p>
           This page describes how GOAT PDF is actually built today, not a legal certification or a
-          guarantee against every possible failure. No automated system is perfectly infallible — for
+          guarantee against every possible failure. No automated system is perfectly infallible: for
           example, a server crash mid-job could in principle leave a temporary file for the periodic sweep
           to catch rather than an immediate deletion. We don&apos;t claim compliance with any specific data
           protection framework; this is a description of a small, self-hosted service, not a formal

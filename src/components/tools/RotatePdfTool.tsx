@@ -83,7 +83,7 @@ export function RotatePdfTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error — please check your connection and try again.",
+        message: "Network error. Please check your connection and try again.",
       });
     }
   }

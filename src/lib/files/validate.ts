@@ -162,7 +162,7 @@ export function validateFile(
     return {
       ok: false,
       code: "CONTENT_TYPE_MISMATCH",
-      message: "The file's contents don't match its name — it may be corrupted or mislabeled.",
+      message: "The file's contents don't match its name. It may be corrupted or mislabeled.",
     };
   }
 

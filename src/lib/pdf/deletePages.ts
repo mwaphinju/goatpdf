@@ -25,13 +25,13 @@ export async function deletePages(context: ProcessingContext): Promise<Processin
   for (const pageNumber of pagesToDelete) {
     if (!Number.isInteger(pageNumber) || pageNumber < 1 || pageNumber > pageCount) {
       throw new InvalidOptionsError(
-        `Page ${pageNumber} doesn't exist — this PDF has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
+        `Page ${pageNumber} doesn't exist. This PDF has ${pageCount} page${pageCount === 1 ? "" : "s"}.`,
       );
     }
   }
 
   if (pagesToDelete.size >= pageCount) {
-    throw new InvalidOptionsError("You can't delete every page — at least one page must remain.");
+    throw new InvalidOptionsError("You can't delete every page. At least one page must remain.");
   }
 
   const keepIndices = Array.from({ length: pageCount }, (_, index) => index).filter(

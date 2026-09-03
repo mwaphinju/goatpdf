@@ -30,12 +30,12 @@ const PRESET_OPTIONS: { value: CompressionPreset; label: string; description: st
   {
     value: "high-quality",
     label: "High Quality",
-    description: "Prioritizes image quality — expect a smaller size reduction.",
+    description: "Prioritizes image quality: expect a smaller size reduction.",
   },
   {
     value: "maximum-compression",
     label: "Maximum Compression",
-    description: "Smallest possible file size — more visible quality loss on images.",
+    description: "Smallest possible file size: more visible quality loss on images.",
   },
 ];
 
@@ -87,7 +87,7 @@ export function CompressPdfTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error — please check your connection and try again.",
+        message: "Network error. Please check your connection and try again.",
       });
     }
   }
@@ -126,7 +126,7 @@ export function CompressPdfTool() {
           </dl>
           {percentReduction === 0 && (
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
-              This PDF was already well optimized — we couldn&apos;t shrink it further without a real loss
+              This PDF was already well optimized. We couldn&apos;t shrink it further without a real loss
               in quality, so we kept your original file intact.
             </p>
           )}

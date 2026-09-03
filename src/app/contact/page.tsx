@@ -14,7 +14,7 @@ const CONTACT_EMAIL = "support@goatpdf.app";
 export default function ContactPage() {
   return (
     <LegalPageLayout title="Contact" updated="August 31, 2026">
-      <p>There&apos;s no support ticket system or account to sign into — just email us directly.</p>
+      <p>There&apos;s no support ticket system or account to sign into: just email us directly.</p>
 
       <LegalSection heading="Email">
         <p>
@@ -22,7 +22,7 @@ export default function ContactPage() {
             {CONTACT_EMAIL}
           </a>
         </p>
-        <p>Because there are no accounts, we can&apos;t look up &quot;your&quot; files or history — please describe what happened, which tool you used, and roughly when, and we&apos;ll do our best to help.</p>
+        <p>Because there are no accounts, we can&apos;t look up &quot;your&quot; files or history. Please describe what happened, which tool you used, and roughly when, and we&apos;ll do our best to help.</p>
       </LegalSection>
 
       <LegalSection heading="What to contact us about">

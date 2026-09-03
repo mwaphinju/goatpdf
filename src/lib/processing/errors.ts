@@ -38,7 +38,7 @@ export class UnreadableFileError extends ProcessingJobError {
   constructor(fileName: string) {
     super(
       "UNREADABLE_FILE",
-      `"${fileName}" couldn't be read — it may be corrupted or password protected.`,
+      `"${fileName}" couldn't be read. It may be corrupted or password protected.`,
     );
     this.name = "UnreadableFileError";
   }

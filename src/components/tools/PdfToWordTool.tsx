@@ -19,7 +19,7 @@ type FlowState =
 const TOOL_NAME = "pdf-to-word";
 
 const FORMATTING_NOTICE =
-  "Conversion quality depends on your PDF. Complex layouts, tables, unusual fonts, and images may not come out exactly as they looked in the original — always review the converted document before using it.";
+  "Conversion quality depends on your PDF. Complex layouts, tables, unusual fonts, and images may not come out exactly as they looked in the original. Always review the converted document before using it.";
 
 export function PdfToWordTool() {
   const [files, setFiles] = useState<File[]>([]);
@@ -64,7 +64,7 @@ export function PdfToWordTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error — please check your connection and try again.",
+        message: "Network error. Please check your connection and try again.",
       });
     }
   }

@@ -19,7 +19,7 @@ export default function TermsPage() {
 
       <LegalSection heading="The service">
         <p>
-          GOAT PDF provides free, browser-based tools for working with PDF files — compressing, merging,
+          GOAT PDF provides free, browser-based tools for working with PDF files: compressing, merging,
           splitting, rotating, deleting pages, converting images to PDF, converting PDF pages to images,
           and converting PDF to Word. No account or payment is required to use any of them. See{" "}
           <Link href="/privacy" className="font-medium text-emerald-700 hover:underline dark:text-emerald-400">
@@ -43,7 +43,7 @@ export default function TermsPage() {
         <p>
           You retain all rights to the files you upload and the files GOAT PDF generates for you. We
           don&apos;t claim any ownership over your content. As described in the Privacy Policy, files are
-          deleted automatically and are not kept as backups — you are responsible for saving the tool&apos;s
+          deleted automatically and are not kept as backups. You are responsible for saving the tool&apos;s
           output somewhere durable after you download it.
         </p>
       </LegalSection>
@@ -51,7 +51,7 @@ export default function TermsPage() {
       <LegalSection heading="No guarantee of perfect results">
         <p>
           These tools are provided on an &quot;as is&quot; and &quot;as available&quot; basis. Compression results vary
-          by file and are never a fixed, promised percentage — some files won&apos;t shrink much, or at all.
+          by file and are never a fixed, promised percentage. Some files won&apos;t shrink much, or at all.
           PDF to Word conversion depends on how complex the original document is; formatting, tables,
           fonts, and images are not guaranteed to convert perfectly, and you should always review a
           converted document before relying on it. We make no warranty, express or implied, about the
@@ -69,8 +69,8 @@ export default function TermsPage() {
 
       <LegalSection heading="Limitation of liability">
         <p>
-          To the fullest extent permitted by law, GOAT PDF and its operator are not liable for any loss —
-          including lost or corrupted files, lost time, or lost data — arising from your use of the
+          To the fullest extent permitted by law, GOAT PDF and its operator are not liable for any loss
+          (including lost or corrupted files, lost time, or lost data) arising from your use of the
           service. Because temporary files are deleted automatically and are not backed up, keep your own
           copy of anything important before and after processing it here.
         </p>

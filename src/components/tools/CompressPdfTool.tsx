@@ -12,6 +12,7 @@ import { formatBytes } from "@/lib/format";
 import type { CompressionPreset } from "@/lib/pdf/compressPdf";
 import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionary";
+import { localizeProcessingErrorMessage } from "@/i18n/processingErrors";
 
 const TOOL_NAME = "compress-pdf";
 
@@ -102,7 +103,7 @@ export function CompressPdfTool({ locale = DEFAULT_LOCALE }: { locale?: Locale }
         trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
-          message: data?.message ?? copy.compressFailed,
+          message: data ? localizeProcessingErrorMessage(data.code, data.message, locale) : copy.compressFailed,
         });
         return;
       }

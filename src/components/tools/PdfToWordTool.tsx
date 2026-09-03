@@ -11,6 +11,7 @@ import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionary";
+import { localizeProcessingErrorMessage } from "@/i18n/processingErrors";
 
 type FlowState =
   | { status: "idle" }
@@ -74,7 +75,7 @@ export function PdfToWordTool({ locale = DEFAULT_LOCALE }: { locale?: Locale } =
         trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
-          message: data?.message ?? copy.convertFailed,
+          message: data ? localizeProcessingErrorMessage(data.code, data.message, locale) : copy.convertFailed,
         });
         return;
       }

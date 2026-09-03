@@ -154,9 +154,11 @@ New/updated test coverage: `tests/e2e/german-pages.spec.ts` (routes/locale, no-E
 
 ## Issues
 
-- **The true global 404 fallback's Open Graph image resolves against `localhost` instead of the real site.** A side effect of the route-group restructuring needed for `<html lang>` correctness: Next's own internal fallback for a fully unmatched path (e.g. `/tools/does-not-exist`) lost access to `metadataBase` once the true top-level `app/layout.tsx` was split into two root layouts. Affects only this non-indexed, generic fallback, not any real content page, and not the existing e2e test for it (which only checks the 404 status code). A custom `not-found.tsx` was attempted and found to produce worse (invalid nested-`<html>`) output, so it was reverted rather than shipped broken. Low severity, explicitly not hidden.
-- **Server-side error messages for corrupted/invalid files are still English on German pages.** Only client-side validation and UI text were localized; the message shown when the server itself rejects a file comes from `lib/processing/errors.ts`, which isn't locale-aware. Fixing this fully means threading a locale field through every tool's upload request and the shared processing/error pipeline used by all 8 tools, which wasn't risked this late in a scoped, small launch. The German e2e test for this case asserts the real (English) behavior rather than a false expectation.
-- **Tool-view analytics don't fire on German tool pages.** `AnalyticsPageView`'s path-matching only recognizes `/tools/<slug>`, not `/de/tools/<slug>`; the generic page-view event still fires correctly with the right German path. Minor observability gap, not a functional bug.
+Status as of the Pre-Production Hardening pass (see that section below for full detail):
+
+- ~~Server-side error messages for corrupted/invalid files are still English on German pages.~~ **Fixed.** See Pre-Production Hardening.
+- ~~Tool-view analytics don't fire on German tool pages.~~ **Fixed.** See Pre-Production Hardening.
+- **The true global 404 fallback's Open Graph image resolves against `localhost` instead of the real site.** Still open; investigated further and confirmed no clean fix exists within the current architecture. See Pre-Production Hardening's "404 Decision" for the specifics, including a second approach that was tried and rejected.
 - German copy has not had a dedicated native-speaker review pass; see below.
 
 ## Native Speaker Review Recommendations
@@ -169,16 +171,87 @@ All German content was written deliberately, not machine-translated, with attent
 
 ## Production Status
 
-- **Committed**: not yet as of this report; will be committed locally per this project's standing workflow once this report is finalized.
-- **Pushed**: no, not requested today.
-- **Deployed**: no. Production (`https://goatpdf.onrender.com`) is still running the previously-deployed build (Week 2 Day 4); nothing from today has reached it.
-- **Live verified**: yes, against a local production build, including a specific run with `NEXT_PUBLIC_SITE_URL=https://goatpdf.onrender.com` set (the real value already configured in Render) to confirm canonical/hreflang/sitemap/`og:url` all correctly use that real hostname rather than `localhost` or the `goatpdf.app` development fallback. Confirmed for the German homepage, all 5 German URLs in the sitemap, and a German tool page's `og:url`. No claim is made about the live production site reflecting today's work until it's actually deployed.
+- **Committed**: yes, locally, including the Pre-Production Hardening changes below (see that section for the exact commit this report was finalized against).
+- **Pushed**: no, not requested.
+- **Deployed**: no. Production (`https://goatpdf.onrender.com`) is still running the previously-deployed build (Week 2 Day 4); nothing from Day 5 or this hardening pass has reached it.
+- **Live verified**: yes, against a local production build, including a specific run with `NEXT_PUBLIC_SITE_URL=https://goatpdf.onrender.com` set (the real value already configured in Render) to confirm canonical/hreflang/x-default/sitemap/`og:url` all correctly use that real hostname rather than `localhost` or the `goatpdf.app` development fallback, re-verified again after the hardening changes. No claim is made about the live production site reflecting this work until it's actually deployed.
+
+## Pre-Production Hardening
+
+A follow-up pass, before deploying Day 5, addressing the 3 issues that report originally flagged. Scope was strictly limited to fixing those 3 documented issues; no new pages, tools, languages, or SEO content were added.
+
+### Analytics fix
+
+`AnalyticsPageView`'s tool-page detection previously only matched `/tools/<slug>`, so visiting a German tool page fired a correct `page_view` but never a `tool_view`. Fixed by extending its path pattern to also match `/de/tools/<slug>` and mapping the German slug back to the real, shared tool identifier (e.g. `/de/tools/pdf-komprimieren` → `compress-pdf`) via a small reverse lookup built from the existing `GERMAN_TOOL_ROUTES` map, rather than inventing a second, German-specific tool identifier that the analytics validation layer (`parseClientAnalyticsEvent`, which checks `tool` against the real `lib/tools.ts` registry) wouldn't recognize.
+
+- **Distinguishing German views**: `tool` stays the same real slug both locales share (so tool-level totals, e.g. "how many times was Compress used", keep working without a schema change); `path` is what actually distinguishes a German view (`/de/tools/pdf-komprimieren` vs. `/tools/compress-pdf`), satisfying the requirement via an existing analytics dimension rather than adding a new one.
+- **No double-firing**: the combined English/German pattern is a single regex checked once per route change, and only one of its two possible branches can match a given `pathname`; exactly one `tool_view` fires, verified directly by an e2e test asserting `toolViews` has length 1.
+- **English behavior preserved**: verified via the existing English `tool_view` e2e test (unchanged, still passing) and by construction, since the non-German branch of the pattern is exactly the original logic.
+- **Tests added**: `tests/e2e/analytics.spec.ts` gained a real browser-interception test (network-request assertions, not a unit mock) confirming a visit to `/de/tools/pdf-komprimieren` fires `page_view` with the German path and `tool_view` with `tool: "compress-pdf"` and the German path, and that exactly one `tool_view` fires.
+
+### German server-error fix
+
+Investigated the actual response shape the processing API routes already send and found the cleanest possible fix: **no server change was needed at all.** `lib/processing/apiHelpers.ts`'s `buildJobResponse` already returns `{ code, message }` for every error, where `code` is one of a small, stable, finite set (`JobErrorCode` in `lib/processing/errors.ts`: `UNREADABLE_FILE`, `TOTAL_SIZE_TOO_LARGE`, `VALIDATION_FAILED`, `TOO_FEW_FILES`, `TOO_MANY_FILES`, `PROCESSING_TIMEOUT`, `PROCESSING_FAILED`, plus 2 codes that can't occur for any real, implemented tool). The server was already doing exactly what this task asked for ("stable error codes/types from the server"); only the client was ignoring `code` and always showing the raw English `message`.
+
+- **New module, `src/i18n/processingErrors.ts`**: `localizeProcessingErrorMessage(code, serverMessage, locale)`. For English (or no locale), it always returns the real server message verbatim, unchanged, byte-for-byte. For German, if `code` is one of the 7 mapped, realistically-reachable codes, it returns a generic, reviewed German message instead; for any other code (including one that doesn't exist yet), it falls back to the real server message, so nothing is ever hidden, blank, or broken.
+- **No duplicated backend, no separate German API routes**: the 4 German tool components (`CompressPdfTool`, `MergePdfTool`, `SplitPdfTool`, `PdfToWordTool`) each changed one line, from `data?.message ?? copy.xFailed` to `data ? localizeProcessingErrorMessage(data.code, data.message, locale) : copy.xFailed`. The `!data` branch (a network failure with no response body at all) is unchanged, still using the existing client-only fallback text. No processing logic, validation logic, or API route was touched.
+- **English behavior preserved exactly**: `localizeProcessingErrorMessage` returns `serverMessage` unmodified whenever `locale === "en"`, which is every existing call site's behavior before this change; verified by a unit test asserting this explicitly, and by the full existing English e2e suite (corrupted-file error tests for all 8 tools) passing unchanged.
+- **Tests added**: `tests/unit/i18n/processingErrors.test.ts` (English always gets the real message regardless of code; German gets the mapped message for all 7 relevant codes; an unmapped or unknown code still falls back to the real message in German too; no locale defaults to English). The existing German Compress PDF corrupted-file e2e test (`tests/e2e/german-pages.spec.ts`) was updated from asserting the English fallback text (its previous, honestly-documented behavior) to asserting the real German message ("beschädigt oder passwortgeschützt") now shown.
+
+### 404 decision
+
+Re-investigated with a specific goal: find a fix that does not introduce nested `<html>` elements, does not break either root layout, does not change any URL, does not produce invalid markup, and does not compromise `<html lang>` correctness.
+
+**A second, different approach was tried and rejected.** Community-documented guidance for this exact Next.js limitation (multiple root layouts leave no owner for a truly global not-found) suggests adding a catch-all route (`[...catchAll]/page.tsx`) inside each root group that calls `notFound()`, so a real `not-found.tsx` placed inside that same group handles it, correctly inheriting that group's `metadataBase`. This was implemented for both `(en)` and `de/`, built, and verified live: it did fix the Open Graph image (`https://goatpdf.app/opengraph-image`, no more `localhost`) for both an unmatched English and an unmatched German path, with no nested `<html>` and no invalid markup, so on those two constraints alone it looked promising.
+
+However, closer inspection of the actual served HTML found it introduces a **worse** violation of this task's own constraints: the rendered `<html>` tag on that fallback page has **no `lang` attribute at all** (`<html id="__next_error__">`), and the page's real content (Header, Footer, the not-found message itself) is not server-rendered into the response at all, only referenced in a client-hydration payload, meaning a client that doesn't execute JavaScript would see an essentially empty `<body>`. Both are explicitly worse than the original single issue (a wrong-but-present, non-indexed image URL). This is Next.js's own internal error-boundary rendering path, not something these two small files can override further, and is outside what's fixable by adjusting only this app's own route files.
+
+**Conclusion: left unchanged, exactly as Day 5 documented it.** This affects only Next's own internal, non-indexed, unmatched-route fallback (e.g. a mistyped URL like `/tools/does-not-exist`), never any real content page, and never the existing e2e test for it (which only asserts the 404 status code, unaffected either way). No worse workaround was shipped to mark this "fixed"; the experiment was fully reverted (verified via a clean rebuild showing the exact original state) rather than left half-applied.
+
+### Files changed
+
+**New:**
+- `src/i18n/processingErrors.ts`
+- `tests/unit/i18n/processingErrors.test.ts`
+
+**Modified:**
+- `src/components/analytics/AnalyticsPageView.tsx` (German tool-path recognition)
+- `src/components/tools/{CompressPdfTool,MergePdfTool,SplitPdfTool,PdfToWordTool}.tsx` (one-line change each: route the server's error through `localizeProcessingErrorMessage`)
+- `tests/e2e/analytics.spec.ts` (new German tool-view test)
+- `tests/e2e/german-pages.spec.ts` (corrupted-file test now asserts the real German message; the PDF to Word functional test also gained `test.setTimeout(90_000)`, matching the existing English equivalent's timeout, a flaky-test fix unrelated to the 3 documented issues, found while re-running the suite)
+
+**Reverted (no net change, tried and rejected):** `src/app/(en)/not-found.tsx`, `src/app/de/not-found.tsx`, `src/app/(en)/[...catchAll]/page.tsx`, `src/app/de/[...catchAll]/page.tsx`.
+
+No file under `src/lib/processing/`, `src/app/api/`, or any of the 4 German tool pages' content was touched. No new German pages, tools, or languages were added.
+
+### Tests added
+
+- `tests/unit/i18n/processingErrors.test.ts`: 6 new unit tests.
+- `tests/e2e/analytics.spec.ts`: 1 new e2e test (German `tool_view`/`page_view` via real network interception, plus a no-double-fire assertion).
+- `tests/e2e/german-pages.spec.ts`: no new tests, 1 existing test's expectation corrected (German error text) and 1 existing test's timeout fixed.
+
+### Final test totals
+
+- `npm run typecheck` — **pass**, 0 errors.
+- `npm run lint` — **pass**, 0 errors, 0 warnings.
+- `npm run check:em-dash` — **pass**, 0 violations.
+- `npm run test` (unit) — **pass**, 267/267 tests, 32/32 test files (261 going into this pass, 6 new).
+- `npm run build` — **pass**, 36 routes, all statically prerendered, unchanged from Day 5.
+- `npm run test:e2e` — **pass**, 207/207 tests (206 going into this pass, 1 new, plus 1 flaky-timeout fix), 9 expected cross-project skips.
+
+Regression checks specifically re-verified after hardening: sitemap has exactly 17 English + 5 German = **22** URLs; all 5 German pages return 200; all existing English URLs, canonicals, and `<html lang="en">` unchanged; all 4 German tools still process real files end to end; the language selector still resolves correctly in both directions; hreflang is still reciprocal on all 5 launched pairs; German pages still render `<html lang="de">`. Also re-verified with `NEXT_PUBLIC_SITE_URL=https://goatpdf.onrender.com`: canonicals, hreflang, x-default, sitemap URLs, and Open Graph URLs all use that real hostname on every English and German content page, with zero `localhost` occurrences anywhere except the one already-documented, non-indexed 404 fallback.
+
+### Remaining known issues
+
+- **The true global 404 fallback's Open Graph image still resolves against `localhost`.** Confirmed, after a genuine second investigation, that no fix within Next.js's current App Router capabilities avoids trading this for a worse problem (missing `<html lang>`, non-server-rendered fallback content) given the multiple-root-layout constraint this app needs for correct German/English `<html lang>`. Left unchanged, as instructed, rather than shipping a worse workaround. Affects only a non-indexed, unmatched-route fallback, never a real page.
+- German copy still has not had a dedicated native-speaker review pass (see the Day 5 section above for exactly what to check first).
+- Server-side error presentation for German covers the 7 realistically-reachable `JobErrorCode` values with generic (non-parameterized) messages; a code added to the server in the future without a corresponding entry in `GERMAN_JOB_ERROR_MESSAGES` will safely fall back to the English server message for German users rather than breaking, but won't be German until that mapping is updated.
 
 ## Day 6 Recommendation
 
-The architecture and the first 5 German pages are solid and fully validated; Day 6 (or whichever day picks this back up) has two reasonable directions, not mutually exclusive:
+The architecture, the first 5 German pages, and the analytics/server-error hardening are solid and fully validated. Day 6 (or whichever day picks this back up) has two reasonable directions, not mutually exclusive:
 
-1. **Expand German coverage to the remaining 4 tools** (Rotate PDF, Delete PDF Pages, JPG to PDF, PDF to JPG), following the exact same pattern established today: German routes under `src/app/de/tools/...`, German content in `src/i18n/toolContent/de.ts`, a `locale` prop on each tool component with its own small `COPY` object, hreflang/sitemap entries via the same already-gated helpers. No new architecture needed.
-2. **Address this phase's documented gaps** before expanding further: get a native-speaker review of the existing 5 pages' copy (see above), and decide whether the server-side error-message localization and German tool-view analytics gaps (see Issues) are worth the shared-code changes they'd require.
+1. **Expand German coverage to the remaining 4 tools** (Rotate PDF, Delete PDF Pages, JPG to PDF, PDF to JPG), following the exact same pattern established across Day 5 and this hardening pass: German routes under `src/app/de/tools/...`, German content in `src/i18n/toolContent/de.ts`, a `locale` prop on each tool component with its own small `COPY` object, hreflang/sitemap entries via the same already-gated helpers, and each new tool's realistically-reachable `JobErrorCode`s added to `GERMAN_JOB_ERROR_MESSAGES`. No new architecture needed.
+2. **Get a native-speaker review** of the existing 5 pages' copy before expanding further (see Native Speaker Review Recommendations above); the two other Day 5 issues (server-error localization, German analytics) are now fixed, and the remaining 404 fallback issue has no available fix within the current architecture (see 404 Decision), so it's not blocking further work.
 
 Either way, legal-page translation and blog-guide translation remain explicitly out of scope until separately requested, per this task's own instructions.

@@ -14,6 +14,7 @@ import { usePdfPageCount } from "@/lib/hooks/usePdfPageCount";
 import { parsePageRanges } from "@/lib/pdf/pageRanges";
 import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionary";
+import { localizeProcessingErrorMessage } from "@/i18n/processingErrors";
 
 const TOOL_NAME = "split-pdf";
 
@@ -107,7 +108,7 @@ export function SplitPdfTool({ locale = DEFAULT_LOCALE }: { locale?: Locale } = 
         trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
-          message: data?.message ?? copy.splitFailed,
+          message: data ? localizeProcessingErrorMessage(data.code, data.message, locale) : copy.splitFailed,
         });
         return;
       }

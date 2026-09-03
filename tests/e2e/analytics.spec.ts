@@ -50,6 +50,30 @@ test.describe("analytics events fire from real page interactions", () => {
     expect(events).toContainEqual({ name: "tool_view", tool: "merge-pdf", path: "/tools/merge-pdf" });
   });
 
+  test("visiting a German tool page reports page_view and tool_view under the real tool slug, distinguished by the German path", async ({
+    page,
+  }) => {
+    const events: unknown[] = [];
+    await page.route("**/api/analytics", async (route) => {
+      events.push(JSON.parse(route.request().postData() ?? "{}"));
+      await route.fulfill({ status: 200, body: JSON.stringify({ ok: true }) });
+    });
+
+    await page.goto("/de/tools/pdf-komprimieren");
+    await expect.poll(() => events.length).toBeGreaterThanOrEqual(2);
+
+    expect(events).toContainEqual({ name: "page_view", path: "/de/tools/pdf-komprimieren" });
+    // `tool` stays the same real registry slug English uses ("compress-pdf",
+    // not a separate German identifier); `path` is what actually
+    // distinguishes this as a German view.
+    expect(events).toContainEqual({ name: "tool_view", tool: "compress-pdf", path: "/de/tools/pdf-komprimieren" });
+
+    // Exactly one tool_view, not two: proves the German route match doesn't
+    // also fall through to firing a second, English-pattern tool_view.
+    const toolViews = (events as { name: string }[]).filter((e) => e.name === "tool_view");
+    expect(toolViews).toHaveLength(1);
+  });
+
   test("adding a valid file reports file_upload with the tool name, never a filename", async ({ page }) => {
     const events: Record<string, unknown>[] = [];
     await page.route("**/api/analytics", async (route) => {

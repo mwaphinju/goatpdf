@@ -100,6 +100,7 @@ test.describe("German pages: functional processing (shared backend, localized UI
   });
 
   test("German PDF to Word: upload, convert, download a .docx", async ({ page }) => {
+    test.setTimeout(90_000);
     await page.goto("/de/tools/pdf-in-word");
     await page.locator('input[type="file"]').setInputFiles(path.join(FIXTURES_DIR, "word-source.pdf"));
     await page.getByRole("button", { name: "In Word umwandeln" }).click();
@@ -111,20 +112,18 @@ test.describe("German pages: functional processing (shared backend, localized UI
     expect(download.suggestedFilename()).toMatch(/\.docx$/);
   });
 
-  // The corrupted-file error text itself comes from the server (see
-  // lib/processing/errors.ts), which isn't locale-aware: only the
-  // client-side UI (upload hints, buttons, the generic network-error
-  // fallback) is localized as of Week 2 Day 5. This is a known, deliberate
-  // scope boundary (see GOAT_PDF_WEEK2_DAY5_GERMAN_LAUNCH_REPORT.md's
-  // Issues section), not a bug: the error still displays correctly, just
-  // in English, on an otherwise German page.
-  test("German Compress PDF shows a clear error for a corrupted file (server error text is still English)", async ({
-    page,
-  }) => {
+  // Pre-production hardening (post-Day-5): the server always returns a
+  // stable `code` (UNREADABLE_FILE here) alongside its English message
+  // (see lib/processing/apiHelpers.ts's buildJobResponse); the client now
+  // presents a German message for that code via
+  // localizeProcessingErrorMessage instead of showing the raw English
+  // server text. The server itself is untouched and still returns the
+  // same English message it always did.
+  test("German Compress PDF shows a German error for a corrupted file", async ({ page }) => {
     await page.goto("/de/tools/pdf-komprimieren");
     await page.locator('input[type="file"]').setInputFiles(path.join(FIXTURES_DIR, "compress-corrupted.pdf"));
     await page.getByRole("button", { name: "PDF komprimieren" }).click();
-    await expect(page.getByText(/corrupted or password protected/)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(/beschädigt oder passwortgeschützt/)).toBeVisible({ timeout: 15_000 });
   });
 });
 

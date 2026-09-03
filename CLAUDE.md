@@ -254,7 +254,7 @@ This rule does not apply to internal code comments (`//`, `/** */`), which are n
 
 Before completing any content-related task, search the files you touched for the literal `—` character (use the `Grep` tool; shell `grep`'s Unicode handling has proven unreliable in this environment) and confirm zero occurrences in user-facing content.
 
-A lightweight automated check enforces this: `npm run check:em-dash` (see `scripts/check-em-dash.mjs`) scans `src/app`, `src/components`, and `src/lib` for the character outside code comments and fails with the offending file/line if found.
+A lightweight automated check enforces this: `npm run check:em-dash` (see `scripts/check-em-dash.mjs`) scans `src/app`, `src/components`, `src/lib`, and `src/i18n` for the character outside code comments and fails with the offending file/line if found.
 
 ---
 

@@ -1,7 +1,16 @@
+import type { Locale } from "@/i18n/config";
 import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/seo";
 import { tools, type ToolDefinition } from "@/lib/tools";
 
-export function websiteStructuredData() {
+/**
+ * `locale`, where accepted below, is optional and omitted by every current
+ * call site: passing it adds schema.org's `inLanguage` field, but leaving
+ * it out keeps a function's output identical to before locale support
+ * existed. A future localized page can pass `locale: "de"` (once German
+ * content is real) without needing a second, duplicated structured-data
+ * builder.
+ */
+export function websiteStructuredData(locale?: Locale) {
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -9,6 +18,7 @@ export function websiteStructuredData() {
     url: SITE_URL,
     description:
       "Free, fast, mobile-friendly PDF tools: compress, merge, split, rotate, delete pages, and convert PDFs. No account required.",
+    ...(locale ? { inLanguage: locale } : {}),
   };
 }
 
@@ -30,7 +40,7 @@ export function toolListStructuredData() {
 // entirely as a web page — there's nothing to install, which
 // applicationCategory: "UtilitiesApplication" also reflects more precisely
 // than the previous "BusinessApplication".
-export function toolSoftwareApplicationStructuredData(tool: ToolDefinition) {
+export function toolSoftwareApplicationStructuredData(tool: ToolDefinition, locale?: Locale) {
   return {
     "@context": "https://schema.org",
     "@type": "WebApplication",
@@ -44,6 +54,7 @@ export function toolSoftwareApplicationStructuredData(tool: ToolDefinition) {
       price: "0",
       priceCurrency: "USD",
     },
+    ...(locale ? { inLanguage: locale } : {}),
   };
 }
 
@@ -85,11 +96,13 @@ export function articleStructuredData({
   headline,
   description,
   datePublished,
+  locale,
 }: {
   path: string;
   headline: string;
   description: string;
   datePublished: string;
+  locale?: Locale;
 }) {
   return {
     "@context": "https://schema.org",
@@ -102,6 +115,7 @@ export function articleStructuredData({
     dateModified: datePublished,
     author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
     publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+    ...(locale ? { inLanguage: locale } : {}),
   };
 }
 

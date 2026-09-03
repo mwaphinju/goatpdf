@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import type { ToolDefinition } from "@/lib/tools";
+import { DEFAULT_LOCALE, LOCALE_OG_MAP, type Locale } from "@/i18n/config";
+import { buildHreflangLanguages, type LocalizedPaths } from "@/i18n/hreflang";
 
 // Not deployed yet (see CLAUDE.md), so there is no confirmed production
 // domain. This placeholder keeps metadataBase/canonical/OG URLs well-formed
@@ -21,29 +23,49 @@ export function absoluteUrl(path: string): string {
 // referenced explicitly, every time, to actually show up.
 const OG_IMAGE = { url: "/opengraph-image", width: 1200, height: 630, alt: "GOAT PDF: Free PDF Tools That Just Work" };
 
-/** Shared page metadata shape: title, description, canonical, Open Graph, and Twitter card, everything but the fields a specific page wants to add itself. */
+/**
+ * Shared page metadata shape: title, description, canonical, Open Graph,
+ * and Twitter card, everything but the fields a specific page wants to
+ * add itself.
+ *
+ * `locale` and `alternateLanguages` are optional and unused by every
+ * current call site, which keeps every existing page's output
+ * byte-for-byte identical to before locale support existed. They exist
+ * so a future localized page can call this same function instead of a
+ * duplicated locale-aware version: pass `locale: "de"` plus a map of
+ * `{ en: "/tools/compress-pdf", de: "/de/tools/pdf-komprimieren" }` and
+ * this function emits the matching `og:locale` and hreflang alternates,
+ * filtered through buildHreflangLanguages so a not-yet-ready locale (see
+ * READY_LOCALES in @/i18n/config) can never actually appear in the
+ * output even if a caller passes its path here early.
+ */
 export function buildPageMetadata({
   path,
   title,
   description,
+  locale = DEFAULT_LOCALE,
+  alternateLanguages,
 }: {
   path: string;
   title: string;
   description: string;
+  locale?: Locale;
+  alternateLanguages?: LocalizedPaths;
 }): Metadata {
   const fullTitle = `${title} | ${SITE_NAME}`;
+  const languages = alternateLanguages ? buildHreflangLanguages(alternateLanguages, absoluteUrl) : undefined;
 
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: languages ? { canonical: path, languages } : { canonical: path },
     openGraph: {
       title: fullTitle,
       description,
       url: path,
       siteName: SITE_NAME,
       type: "website",
-      locale: "en_US",
+      locale: LOCALE_OG_MAP[locale],
       images: [OG_IMAGE],
     },
     twitter: {

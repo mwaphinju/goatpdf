@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { ChevronDownIcon, LogoMark, MenuIcon, XIcon } from "@/components/icons";
+import { LanguageSelector } from "@/components/layout/LanguageSelector";
 import { tools } from "@/lib/tools";
 
 export function Header() {
@@ -41,6 +42,7 @@ export function Header() {
           >
             All tools
           </Link>
+          <LanguageSelector />
         </nav>
 
         {/* Mobile navigation toggle */}
@@ -71,6 +73,9 @@ export function Header() {
               </li>
             ))}
           </ul>
+          <div className="border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+            <LanguageSelector />
+          </div>
         </nav>
       )}
     </header>

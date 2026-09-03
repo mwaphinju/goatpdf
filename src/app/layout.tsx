@@ -9,6 +9,7 @@ import { Footer } from "@/components/layout/Footer";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics/ga";
 import { buildPageMetadata, SITE_URL } from "@/lib/seo";
 import { websiteStructuredData } from "@/lib/structuredData";
+import { DEFAULT_LOCALE } from "@/i18n/config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,7 +48,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      lang="en"
+      lang={DEFAULT_LOCALE}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-200">

@@ -47,6 +47,38 @@ describe("buildPageMetadata", () => {
   });
 });
 
+describe("buildPageMetadata locale awareness", () => {
+  it("defaults to English's Open Graph locale tag when no locale is given, matching every existing page's call site", () => {
+    const metadata = buildPageMetadata({ path: "/terms", title: "Terms", description: "The terms." });
+    expect(metadata.openGraph).toMatchObject({ locale: "en_US" });
+  });
+
+  it("omits alternates.languages entirely when no alternateLanguages are given", () => {
+    const metadata = buildPageMetadata({ path: "/terms", title: "Terms", description: "The terms." });
+    expect(metadata.alternates).toEqual({ canonical: "/terms" });
+  });
+
+  it("still omits alternates.languages when alternateLanguages only has English, since German isn't ready", () => {
+    const metadata = buildPageMetadata({
+      path: "/tools/compress-pdf",
+      title: "Compress PDF",
+      description: "desc",
+      alternateLanguages: { en: "/tools/compress-pdf", de: "/de/tools/pdf-komprimieren" },
+    });
+    expect(metadata.alternates).toEqual({ canonical: "/tools/compress-pdf" });
+  });
+
+  it("sets the requested locale's Open Graph tag when one is explicitly passed", () => {
+    const metadata = buildPageMetadata({
+      path: "/tools/compress-pdf",
+      title: "Compress PDF",
+      description: "desc",
+      locale: "de",
+    });
+    expect(metadata.openGraph).toMatchObject({ locale: "de_DE" });
+  });
+});
+
 describe("buildToolMetadata", () => {
   it("builds metadata pointing at the tool's own /tools/<slug> path", () => {
     const tool = getToolBySlug("compress-pdf")!;

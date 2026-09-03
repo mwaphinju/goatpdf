@@ -46,6 +46,18 @@ describe("toolSoftwareApplicationStructuredData", () => {
   });
 });
 
+describe("locale-aware structured data", () => {
+  it("omits inLanguage when no locale is passed, matching every existing page's call site", () => {
+    expect(websiteStructuredData()).not.toHaveProperty("inLanguage");
+    expect(toolSoftwareApplicationStructuredData(mergeTool)).not.toHaveProperty("inLanguage");
+  });
+
+  it("adds inLanguage only when a locale is explicitly passed", () => {
+    expect(websiteStructuredData("en")).toMatchObject({ inLanguage: "en" });
+    expect(toolSoftwareApplicationStructuredData(mergeTool, "de")).toMatchObject({ inLanguage: "de" });
+  });
+});
+
 describe("toolBreadcrumbStructuredData", () => {
   it("builds a two-level Home > Tool breadcrumb", () => {
     const data = toolBreadcrumbStructuredData(mergeTool);

@@ -1,4 +1,4 @@
-// Scans src/app, src/components, and src/lib for the Unicode em dash
+// Scans src/app, src/components, src/lib, and src/i18n for the Unicode em dash
 // (U+2014) outside of code comments, to catch it before it reaches
 // user-facing content (page copy, metadata, structured data, error
 // messages). See CLAUDE.md's "User-facing writing style" section.
@@ -12,7 +12,7 @@ import { extname, join } from "node:path";
 
 const EM_DASH = String.fromCodePoint(0x2014);
 
-const SCAN_ROOTS = ["src/app", "src/components", "src/lib"];
+const SCAN_ROOTS = ["src/app", "src/components", "src/lib", "src/i18n"];
 const SCAN_EXTENSIONS = new Set([".ts", ".tsx"]);
 const EXCLUDED_DIR_NAMES = new Set([".git", "node_modules", ".next", "dist", "build", "coverage"]);
 
@@ -128,7 +128,7 @@ function main() {
   }
 
   if (allViolations.length === 0) {
-    console.log("check:em-dash: no em dash (U+2014) found outside code comments in src/app, src/components, src/lib.");
+    console.log(`check:em-dash: no em dash (U+2014) found outside code comments in ${SCAN_ROOTS.join(", ")}.`);
     return;
   }
 

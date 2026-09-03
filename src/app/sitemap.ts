@@ -19,5 +19,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9,
   }));
 
-  return [...staticPages, ...toolPages];
+  // Week 2 Day 3 long-tail guide articles: supporting content, not primary
+  // conversion pages, so a slightly lower priority than the tool pages
+  // themselves.
+  const blogSlugs = [
+    "how-to-compress-a-pdf-for-email",
+    "how-to-merge-multiple-pdfs-in-order",
+    "pdf-to-word-formatting-what-to-expect",
+    "rotate-pdf-permanently-vs-viewer-rotation",
+  ];
+  const blogPages: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
+    url: `${SITE_URL}/blog/${slug}`,
+    changeFrequency: "monthly",
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...toolPages, ...blogPages];
 }

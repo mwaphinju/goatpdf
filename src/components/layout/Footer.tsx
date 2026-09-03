@@ -9,6 +9,13 @@ const COMPANY_LINKS = [
   { href: "/terms", label: "Terms of Service" },
 ];
 
+const GUIDE_LINKS = [
+  { href: "/blog/how-to-compress-a-pdf-for-email", label: "Compress a PDF for Email" },
+  { href: "/blog/how-to-merge-multiple-pdfs-in-order", label: "Merge PDFs in Order" },
+  { href: "/blog/pdf-to-word-formatting-what-to-expect", label: "PDF to Word Formatting" },
+  { href: "/blog/rotate-pdf-permanently-vs-viewer-rotation", label: "Rotate a PDF Permanently" },
+];
+
 export function Footer() {
   const year = new Date().getFullYear();
   const half = Math.ceil(tools.length / 2);
@@ -28,7 +35,7 @@ export function Footer() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           {columns.map((column, columnIndex) => (
             <ul key={columnIndex} className="flex flex-col gap-2">
               {column.map((tool) => (
@@ -43,6 +50,18 @@ export function Footer() {
               ))}
             </ul>
           ))}
+          <ul className="flex flex-col gap-2">
+            {GUIDE_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-sm text-slate-600 hover:text-emerald-700 dark:text-slate-400 dark:hover:text-emerald-400"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
           <ul className="flex flex-col gap-2">
             {COMPANY_LINKS.map((link) => (
               <li key={link.href}>

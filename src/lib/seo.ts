@@ -55,6 +55,53 @@ export function buildPageMetadata({
   };
 }
 
+/**
+ * Same shape as buildPageMetadata, for the /blog/* guide articles added in
+ * Week 2 Day 3. Kept separate rather than reusing buildPageMetadata, since
+ * that function's brand suffix (see fullTitle above) uses an em dash
+ * character as its separator, and these articles have an explicit,
+ * absolute requirement to contain zero em dashes anywhere, including in
+ * the rendered <title> tag. Using `title: { absolute: ... }` bypasses the
+ * root layout's title template for these pages specifically, without
+ * changing that template, or any other page's titles, at all.
+ */
+export function buildArticleMetadata({
+  path,
+  title,
+  description,
+}: {
+  path: string;
+  title: string;
+  description: string;
+}): Metadata {
+  const fullTitle = `${title} | ${SITE_NAME}`;
+  // Same image as OG_IMAGE above, but with its own alt text. OG_IMAGE's alt
+  // string contains an em dash character, and this function exists
+  // specifically to keep that character out of these pages' output.
+  const articleOgImage = { ...OG_IMAGE, alt: "GOAT PDF: Free PDF Tools That Just Work" };
+
+  return {
+    title: { absolute: fullTitle },
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      title: fullTitle,
+      description,
+      url: path,
+      siteName: SITE_NAME,
+      type: "article",
+      locale: "en_US",
+      images: [articleOgImage],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: fullTitle,
+      description,
+      images: [OG_IMAGE.url],
+    },
+  };
+}
+
 export function buildToolMetadata(tool: ToolDefinition): Metadata {
   return buildPageMetadata({
     path: `/tools/${tool.slug}`,

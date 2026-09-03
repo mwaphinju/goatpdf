@@ -29,7 +29,7 @@ test("homepage footer links reach every tool page", async ({ page }) => {
   await expect(footer).toBeVisible();
 
   for (const tool of TOOLS) {
-    await expect(footer.getByRole("link", { name: tool.name })).toBeVisible();
+    await expect(footer.getByRole("link", { name: tool.name, exact: true })).toBeVisible();
   }
 });
 

@@ -14,14 +14,14 @@ describe("locale configuration", () => {
     expect(DEFAULT_LOCALE).toBe("en");
   });
 
-  it("supports English and German, with English and only English ready for public use today", () => {
+  it("supports English and German, both ready for public use as of Week 2 Day 5", () => {
     expect(SUPPORTED_LOCALES).toEqual(["en", "de"]);
-    expect(READY_LOCALES).toEqual(["en"]);
+    expect(READY_LOCALES).toEqual(["en", "de"]);
   });
 
-  it("reports German as not ready and English as ready", () => {
+  it("reports both English and German as ready", () => {
     expect(isLocaleReady("en")).toBe(true);
-    expect(isLocaleReady("de")).toBe(false);
+    expect(isLocaleReady("de")).toBe(true);
   });
 
   it("has a display name and an Open Graph locale tag for every supported locale", () => {

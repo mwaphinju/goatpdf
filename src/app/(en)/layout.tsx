@@ -10,6 +10,7 @@ import { GA_MEASUREMENT_ID } from "@/lib/analytics/ga";
 import { buildPageMetadata, SITE_URL } from "@/lib/seo";
 import { websiteStructuredData } from "@/lib/structuredData";
 import { DEFAULT_LOCALE } from "@/i18n/config";
+import { EN_TO_DE_PATH } from "@/i18n/pageMap";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,7 +32,12 @@ export const metadata: Metadata = {
   // homepage passes just the tagline here and overrides the real <title>
   // separately below to the full "GOAT PDF | ..." form every other page's
   // "%s | GOAT PDF" template also produces.
-  ...buildPageMetadata({ path: "/", title: "Free PDF Tools That Just Work", description: DESCRIPTION }),
+  ...buildPageMetadata({
+    path: "/",
+    title: "Free PDF Tools That Just Work",
+    description: DESCRIPTION,
+    alternateLanguages: { en: "/", de: EN_TO_DE_PATH["/"] },
+  }),
   metadataBase: new URL(SITE_URL),
   title: {
     default: "GOAT PDF: Free PDF Tools That Just Work",

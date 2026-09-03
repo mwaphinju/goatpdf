@@ -9,6 +9,8 @@ import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionary";
 
 type FlowState =
   | { status: "idle" }
@@ -18,10 +20,34 @@ type FlowState =
 
 const TOOL_NAME = "pdf-to-word";
 
-const FORMATTING_NOTICE =
-  "Conversion quality depends on your PDF. Complex layouts, tables, unusual fonts, and images may not come out exactly as they looked in the original. Always review the converted document before using it.";
+const COPY = {
+  en: {
+    formattingNotice:
+      "Conversion quality depends on your PDF. Complex layouts, tables, unusual fonts, and images may not come out exactly as they looked in the original. Always review the converted document before using it.",
+    beforeConvertTitle: "Before you convert",
+    afterConvertTitle: "Please double-check the formatting",
+    uploadLabel: "Drag and drop your PDF file here",
+    uploadHint: "Up to 50 MB. Files are processed privately and deleted automatically.",
+    converting: "Converting your PDF to Word… this can take a little longer than other tools.",
+    convertFailed: "Something went wrong while converting your PDF. Please try again.",
+    convertAction: "Convert to Word",
+  },
+  de: {
+    formattingNotice:
+      "Die Konvertierungsqualität hängt von deiner PDF-Datei ab. Komplexe Layouts, Tabellen, ungewöhnliche Schriftarten und Bilder werden möglicherweise nicht exakt wie im Original übernommen. GOAT PDF verfügt aktuell über keine OCR-Funktion, daher lassen sich gescannte oder reine Bild-PDFs unter Umständen nicht in bearbeitbaren Text umwandeln. Überprüfe das konvertierte Dokument vor der Verwendung immer sorgfältig.",
+    beforeConvertTitle: "Bevor du konvertierst",
+    afterConvertTitle: "Bitte überprüfe die Formatierung",
+    uploadLabel: "Ziehe deine PDF-Datei hierher",
+    uploadHint: "Bis zu 50 MB. Dateien werden vertraulich verarbeitet und automatisch gelöscht.",
+    converting: "Deine PDF-Datei wird in Word umgewandelt… das kann etwas länger dauern als bei anderen Tools.",
+    convertFailed: "Bei der Konvertierung deiner PDF-Datei ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+    convertAction: "In Word umwandeln",
+  },
+} as const;
 
-export function PdfToWordTool() {
+export function PdfToWordTool({ locale = DEFAULT_LOCALE }: { locale?: Locale } = {}) {
+  const copy = COPY[locale];
+  const t = getDictionary(locale);
   const [files, setFiles] = useState<File[]>([]);
   const [flow, setFlow] = useState<FlowState>({ status: "idle" });
 
@@ -48,7 +74,7 @@ export function PdfToWordTool() {
         trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
-          message: data?.message ?? "Something went wrong while converting your PDF. Please try again.",
+          message: data?.message ?? copy.convertFailed,
         });
         return;
       }
@@ -64,7 +90,7 @@ export function PdfToWordTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error. Please check your connection and try again.",
+        message: t.errors.networkError,
       });
     }
   }
@@ -84,14 +110,15 @@ export function PdfToWordTool() {
           downloadUrl={flow.downloadUrl}
           onDownload={handleDownload}
           onReset={reset}
+          locale={locale}
         />
-        <ErrorMessage tone="info" title="Please double-check the formatting" message={FORMATTING_NOTICE} />
+        <ErrorMessage tone="info" title={copy.afterConvertTitle} message={copy.formattingNotice} />
       </div>
     );
   }
 
   if (flow.status === "processing") {
-    return <ProcessingState label="Converting your PDF to Word… this can take a little longer than other tools." />;
+    return <ProcessingState label={copy.converting} />;
   }
 
   return (
@@ -103,20 +130,22 @@ export function PdfToWordTool() {
         maxSizeMB={50}
         files={files}
         onFilesChange={setFiles}
-        label="Drag and drop your PDF file here"
-        hint="Up to 50 MB. Files are processed privately and deleted automatically."
+        label={copy.uploadLabel}
+        hint={copy.uploadHint}
+        locale={locale}
       />
 
-      {file && <ErrorMessage tone="info" title="Before you convert" message={FORMATTING_NOTICE} />}
+      {file && <ErrorMessage tone="info" title={copy.beforeConvertTitle} message={copy.formattingNotice} />}
 
       {flow.status === "error" && <ErrorMessage message={flow.message} />}
 
       <ToolActionBar
-        actionLabel="Convert to Word"
+        actionLabel={copy.convertAction}
         onAction={handleConvert}
         disabled={!file}
         showReset={file !== null}
         onReset={reset}
+        locale={locale}
       />
     </div>
   );

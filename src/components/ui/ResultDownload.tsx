@@ -2,6 +2,8 @@
 
 import { CheckCircleIcon, DownloadIcon } from "@/components/icons";
 import { Button } from "@/components/ui/Button";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionary";
 
 export interface ResultDownloadProps {
   fileName: string;
@@ -10,6 +12,8 @@ export interface ResultDownloadProps {
   onReset?: () => void;
   /** Overrides the default navigation-based download (window.location.href) — e.g. to fetch as a blob so a repeat click against a single-use link can be handled without leaving the page. */
   onDownload?: () => void;
+  /** Defaults to English; every existing call site omits this and is unaffected. */
+  locale?: Locale;
 }
 
 export function ResultDownload({
@@ -18,7 +22,10 @@ export function ResultDownload({
   downloadUrl,
   onReset,
   onDownload,
+  locale = DEFAULT_LOCALE,
 }: ResultDownloadProps) {
+  const t = getDictionary(locale);
+
   return (
     <div
       role="status"
@@ -41,11 +48,11 @@ export function ResultDownload({
             })
           }
         >
-          Download
+          {t.buttons.download}
         </Button>
         {onReset && (
           <Button variant="secondary" onClick={onReset}>
-            Process another file
+            {t.buttons.processAnotherFile}
           </Button>
         )}
       </div>

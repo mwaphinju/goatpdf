@@ -14,13 +14,21 @@ export const DEFAULT_LOCALE: Locale = "en";
 /**
  * Locales whose content is complete and reviewed enough to expose as real,
  * indexable public pages (routes, sitemap entries, hreflang alternates).
- * "de" stays out of this list until Day 5 actually ships German content;
- * until then, every locale-aware helper in this app treats "de" as
- * architecture-only, never publishing a live URL, sitemap entry, or
- * hreflang link for it. Flip this when a locale's content is genuinely
- * ready, not when its dictionary merely exists.
+ * Every locale-aware helper in this app treats a locale not in this list
+ * as architecture-only, never publishing a live URL, sitemap entry, or
+ * hreflang link for it. Flip an entry into this list only once a
+ * locale's content is genuinely ready, not when its dictionary merely
+ * exists.
+ *
+ * "de" was added here in Week 2 Day 5, after all 5 launched German pages
+ * (homepage, Compress, Merge, Split, PDF to Word) existed, rendered
+ * correctly, had complete German UI/metadata/structured data, and passed
+ * the full test suite. See GOAT_PDF_WEEK2_DAY5_GERMAN_LAUNCH_REPORT.md.
+ * The other 4 tools, the 4 blog guides, and the legal pages are still
+ * English-only: this flag does not mean the whole site is translated,
+ * only that the specific German pages that exist are ready to be found.
  */
-export const READY_LOCALES: readonly Locale[] = ["en"];
+export const READY_LOCALES: readonly Locale[] = ["en", "de"];
 
 export function isLocaleReady(locale: Locale): boolean {
   return READY_LOCALES.includes(locale);

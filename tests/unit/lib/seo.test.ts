@@ -58,14 +58,31 @@ describe("buildPageMetadata locale awareness", () => {
     expect(metadata.alternates).toEqual({ canonical: "/terms" });
   });
 
-  it("still omits alternates.languages when alternateLanguages only has English, since German isn't ready", () => {
+  it("emits real hreflang alternates plus x-default when both a real English and German path are given (both ready as of Week 2 Day 5)", () => {
     const metadata = buildPageMetadata({
       path: "/tools/compress-pdf",
       title: "Compress PDF",
       description: "desc",
       alternateLanguages: { en: "/tools/compress-pdf", de: "/de/tools/pdf-komprimieren" },
     });
-    expect(metadata.alternates).toEqual({ canonical: "/tools/compress-pdf" });
+    expect(metadata.alternates).toEqual({
+      canonical: "/tools/compress-pdf",
+      languages: {
+        en: `${SITE_URL}/tools/compress-pdf`,
+        de: `${SITE_URL}/de/tools/pdf-komprimieren`,
+        "x-default": `${SITE_URL}/tools/compress-pdf`,
+      },
+    });
+  });
+
+  it("omits alternates.languages when alternateLanguages only has a path for a page with no German counterpart", () => {
+    const metadata = buildPageMetadata({
+      path: "/tools/rotate-pdf",
+      title: "Rotate PDF",
+      description: "desc",
+      alternateLanguages: { en: "/tools/rotate-pdf" },
+    });
+    expect(metadata.alternates).toEqual({ canonical: "/tools/rotate-pdf" });
   });
 
   it("sets the requested locale's Open Graph tag when one is explicitly passed", () => {

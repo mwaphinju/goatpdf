@@ -20,14 +20,26 @@ describe("getDictionary", () => {
     expect(de.navigation.allTools).toBe("Alle Tools");
   });
 
-  it("falls back to the English value for keys German doesn't define yet, never an empty string or a raw key", () => {
-    const de = getDictionary("de");
-    const en = getDictionary("en");
+  it("falls back to the English value for a key a locale doesn't define, never an empty string or a raw key", async () => {
+    // The real de.ts is, as of Week 2 Day 5, a complete translation of
+    // every key used on the 5 launched German pages (see its own
+    // top-of-file comment), so this test simulates a locale with a
+    // genuine gap instead, to verify the fallback mechanism itself
+    // rather than depending on today's content happening to be
+    // incomplete somewhere.
+    vi.resetModules();
+    vi.doMock("@/i18n/dictionaries/de", () => ({ de: { footer: {} } }));
 
-    // footer.description has no German translation yet (see dictionaries/de.ts).
-    expect(de.footer.description).toBe(en.footer.description);
-    expect(de.footer.description).not.toBe("");
-    expect(de.footer.description).not.toContain("footer.description");
+    const { getDictionary: getDictionaryWithGap } = await import("@/i18n/dictionary");
+    const en = getDictionaryWithGap("en");
+    const deWithGap = getDictionaryWithGap("de");
+
+    expect(deWithGap.footer.description).toBe(en.footer.description);
+    expect(deWithGap.footer.description).not.toBe("");
+    expect(deWithGap.footer.description).not.toContain("footer.description");
+
+    vi.doUnmock("@/i18n/dictionaries/de");
+    vi.resetModules();
   });
 
   it("never returns undefined, an empty string, or a dotted key for any Dictionary field in any supported locale", () => {
@@ -40,12 +52,19 @@ describe("getDictionary", () => {
     }
   });
 
-  it("reports every key it had to fall back on, for a locale with incomplete coverage", () => {
+  it("reports every key it had to fall back on, for a locale with incomplete coverage", async () => {
+    vi.resetModules();
+    vi.doMock("@/i18n/dictionaries/de", () => ({ de: { footer: {} } }));
+
+    const { getDictionary: getDictionaryWithGap } = await import("@/i18n/dictionary");
     const missing: MissingTranslationKey[] = [];
-    getDictionary("de", { onMissing: (entry) => missing.push(entry) });
+    getDictionaryWithGap("de", { onMissing: (entry) => missing.push(entry) });
 
     expect(missing.length).toBeGreaterThan(0);
     expect(missing.some((entry) => entry.section === "footer" && entry.key === "description")).toBe(true);
+
+    vi.doUnmock("@/i18n/dictionaries/de");
+    vi.resetModules();
   });
 
   it("never reports a fallback for English itself, the source of truth", () => {
@@ -54,12 +73,19 @@ describe("getDictionary", () => {
     expect(onMissing).not.toHaveBeenCalled();
   });
 
-  it("logs a dev-mode warning for a missing German key when no onMissing override is given", () => {
+  it("logs a dev-mode warning for a missing key when no onMissing override is given", async () => {
+    vi.resetModules();
+    vi.doMock("@/i18n/dictionaries/de", () => ({ de: { footer: {} } }));
+
+    const { getDictionary: getDictionaryWithGap } = await import("@/i18n/dictionary");
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    getDictionary("de");
+    getDictionaryWithGap("de");
     expect(warnSpy).toHaveBeenCalled();
     expect(warnSpy.mock.calls.some((call) => String(call[0]).includes("footer.description"))).toBe(true);
     warnSpy.mockRestore();
+
+    vi.doUnmock("@/i18n/dictionaries/de");
+    vi.resetModules();
   });
 });
 

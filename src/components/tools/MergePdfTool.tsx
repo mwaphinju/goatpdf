@@ -10,6 +10,8 @@ import { ToolActionBar } from "@/components/tools/ToolActionBar";
 import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted } from "@/lib/analytics/ga";
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionary";
 
 type FlowState =
   | { status: "idle" }
@@ -21,7 +23,30 @@ const TOOL_NAME = "merge-pdf";
 const MIN_FILES = 2;
 const MAX_FILES = 20;
 
-export function MergePdfTool() {
+const COPY = {
+  en: {
+    uploadLabel: "Drag and drop your PDF files here",
+    uploadHint: (max: number) => `Up to ${max} files, 50 MB each. Files are processed privately and deleted automatically.`,
+    filesToMerge: "Files to merge, in order",
+    addAtLeast: (min: number) => `Add at least ${min} PDF files to merge.`,
+    merging: (count: number) => `Merging ${count} PDFs…`,
+    mergeFailed: "Something went wrong while merging your files. Please try again.",
+    mergeAction: (count: number) => (count > 0 ? `Merge ${count} PDFs` : "Merge PDFs"),
+  },
+  de: {
+    uploadLabel: "Ziehe deine PDF-Dateien hierher",
+    uploadHint: (max: number) => `Bis zu ${max} Dateien, je 50 MB. Dateien werden vertraulich verarbeitet und automatisch gelöscht.`,
+    filesToMerge: "Dateien zum Zusammenfügen, in der gewünschten Reihenfolge",
+    addAtLeast: (min: number) => `Füge mindestens ${min} PDF-Dateien hinzu, um sie zusammenzufügen.`,
+    merging: (count: number) => `${count} PDFs werden zusammengefügt…`,
+    mergeFailed: "Beim Zusammenfügen deiner Dateien ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+    mergeAction: (count: number) => (count > 0 ? `${count} PDFs zusammenfügen` : "PDFs zusammenfügen"),
+  },
+} as const;
+
+export function MergePdfTool({ locale = DEFAULT_LOCALE }: { locale?: Locale } = {}) {
+  const copy = COPY[locale];
+  const t = getDictionary(locale);
   const [files, setFiles] = useState<File[]>([]);
   const [flow, setFlow] = useState<FlowState>({ status: "idle" });
 
@@ -45,7 +70,7 @@ export function MergePdfTool() {
         trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
-          message: data?.message ?? "Something went wrong while merging your files. Please try again.",
+          message: data?.message ?? copy.mergeFailed,
         });
         return;
       }
@@ -61,7 +86,7 @@ export function MergePdfTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error. Please check your connection and try again.",
+        message: t.errors.networkError,
       });
     }
   }
@@ -80,12 +105,13 @@ export function MergePdfTool() {
         downloadUrl={flow.downloadUrl}
         onDownload={handleDownload}
         onReset={reset}
+        locale={locale}
       />
     );
   }
 
   if (flow.status === "processing") {
-    return <ProcessingState label={`Merging ${files.length} PDFs…`} />;
+    return <ProcessingState label={copy.merging(files.length)} />;
   }
 
   const canMerge = files.length >= MIN_FILES && files.length <= MAX_FILES;
@@ -100,24 +126,26 @@ export function MergePdfTool() {
         files={files}
         onFilesChange={setFiles}
         hideFileList
-        label="Drag and drop your PDF files here"
-        hint={`Up to ${MAX_FILES} files, 50 MB each. Files are processed privately and deleted automatically.`}
+        label={copy.uploadLabel}
+        hint={copy.uploadHint(MAX_FILES)}
+        locale={locale}
       />
 
-      <ReorderableFileList files={files} onChange={setFiles} label="Files to merge, in order" />
+      <ReorderableFileList files={files} onChange={setFiles} label={copy.filesToMerge} locale={locale} />
 
       {files.length > 0 && files.length < MIN_FILES && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">Add at least {MIN_FILES} PDF files to merge.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{copy.addAtLeast(MIN_FILES)}</p>
       )}
 
       {flow.status === "error" && <ErrorMessage message={flow.message} />}
 
       <ToolActionBar
-        actionLabel={files.length > 0 ? `Merge ${files.length} PDFs` : "Merge PDFs"}
+        actionLabel={copy.mergeAction(files.length)}
         onAction={handleMerge}
         disabled={!canMerge}
         showReset={files.length > 0}
         onReset={reset}
+        locale={locale}
       />
     </div>
   );

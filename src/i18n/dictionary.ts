@@ -37,14 +37,22 @@ export interface Dictionary {
     tryAgain: string;
     download: string;
     cancel: string;
+    processAnotherFile: string;
   };
   upload: {
     dragDropLabel: string;
     dropHere: string;
+    browsePrefix: string;
+    browseLink: string;
+    browseSuffix: string;
+    unsupportedFileType: string;
+    fileTooLargeDetail: string;
+    removeFile: string;
   };
   processing: {
     processing: string;
     pleaseWait: string;
+    processingFile: string;
   };
   errors: {
     networkError: string;
@@ -55,6 +63,15 @@ export interface Dictionary {
   };
   success: {
     downloadReady: string;
+  };
+  pageStatus: {
+    reading: string;
+    pageCountSingular: string;
+    pageCountPlural: string;
+  };
+  fileList: {
+    moveUp: string;
+    moveDown: string;
   };
   a11y: {
     languageSelector: string;

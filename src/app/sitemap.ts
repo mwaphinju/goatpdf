@@ -1,6 +1,9 @@
 import type { MetadataRoute } from "next";
-import { SITE_URL } from "@/lib/seo";
+import { absoluteUrl, SITE_URL } from "@/lib/seo";
 import { tools } from "@/lib/tools";
+import { localizedSitemapEntries } from "@/i18n/sitemap";
+import { GERMAN_TOOL_ROUTES, LAUNCHED_GERMAN_TOOL_SLUGS } from "@/i18n/toolContent";
+import { EN_TO_DE_PATH } from "@/i18n/pageMap";
 
 // No lastModified dates — this app doesn't track real per-page content-change
 // timestamps, and a fabricated date would be worse than none at all.
@@ -34,5 +37,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...toolPages, ...blogPages];
+  // Week 2 Day 5: the 5 launched German pages, routed through the Day 4
+  // localizedSitemapEntries helper so they only actually appear once "de"
+  // is in READY_LOCALES (see @/i18n/config) — the same gate hreflang uses,
+  // so the sitemap and hreflang can never disagree about what's real. Only
+  // the German path is passed in (not an "en" one too) since the English
+  // homepage/tool pages are already listed above via staticPages/toolPages.
+  const germanHomePage = localizedSitemapEntries(
+    { de: EN_TO_DE_PATH["/"] },
+    { absoluteUrl, changeFrequency: "weekly", priority: 1 },
+  );
+
+  const germanToolPages = LAUNCHED_GERMAN_TOOL_SLUGS.flatMap((slug) =>
+    localizedSitemapEntries({ de: GERMAN_TOOL_ROUTES[slug] }, { absoluteUrl, changeFrequency: "monthly", priority: 0.9 }),
+  );
+
+  return [...staticPages, ...toolPages, ...blogPages, ...germanHomePage, ...germanToolPages];
 }

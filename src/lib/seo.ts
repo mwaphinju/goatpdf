@@ -117,14 +117,15 @@ export function buildArticleMetadata({
   };
 }
 
-export function buildToolMetadata(tool: ToolDefinition): Metadata {
+export function buildToolMetadata(tool: ToolDefinition, alternateLanguages?: LocalizedPaths): Metadata {
   return buildPageMetadata({
     path: `/tools/${tool.slug}`,
     // seoTitle/metaDescription are written for search intent and result-page
-    // copy specifically — distinct from tool.name/description, which stay
+    // copy specifically: distinct from tool.name/description, which stay
     // the on-page H1 and card text, so this never changes anything visible
     // in the UI.
     title: tool.seoTitle,
     description: tool.metaDescription,
+    alternateLanguages,
   });
 }

@@ -5,15 +5,20 @@ import type { DragEvent } from "react";
 import { ChevronDownIcon, FileIcon, GripIcon, XIcon } from "@/components/icons";
 import { formatBytes } from "@/lib/format";
 import { cn } from "@/lib/cn";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { getDictionary, interpolate } from "@/i18n/dictionary";
 
 export interface ReorderableFileListProps {
   files: File[];
   onChange: (files: File[]) => void;
   label: string;
+  /** Defaults to English; every existing call site omits this and is unaffected. */
+  locale?: Locale;
 }
 
 /** An accessible, reorderable file list — move-up/down buttons plus native drag-and-drop — shared by every tool where the order of multiple uploaded files matters (Merge, JPG to PDF). */
-export function ReorderableFileList({ files, onChange, label }: ReorderableFileListProps) {
+export function ReorderableFileList({ files, onChange, label, locale = DEFAULT_LOCALE }: ReorderableFileListProps) {
+  const t = getDictionary(locale);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   function moveFile(index: number, direction: -1 | 1) {
@@ -68,7 +73,7 @@ export function ReorderableFileList({ files, onChange, label }: ReorderableFileL
             type="button"
             onClick={() => moveFile(index, -1)}
             disabled={index === 0}
-            aria-label={`Move ${file.name} up`}
+            aria-label={interpolate(t.fileList.moveUp, { fileName: file.name })}
             className="shrink-0 rounded p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus-visible:outline-emerald-500"
           >
             <ChevronDownIcon className="h-4 w-4 rotate-180" />
@@ -77,7 +82,7 @@ export function ReorderableFileList({ files, onChange, label }: ReorderableFileL
             type="button"
             onClick={() => moveFile(index, 1)}
             disabled={index === files.length - 1}
-            aria-label={`Move ${file.name} down`}
+            aria-label={interpolate(t.fileList.moveDown, { fileName: file.name })}
             className="shrink-0 rounded p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:opacity-30 disabled:hover:bg-transparent dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus-visible:outline-emerald-500"
           >
             <ChevronDownIcon className="h-4 w-4" />
@@ -85,7 +90,7 @@ export function ReorderableFileList({ files, onChange, label }: ReorderableFileL
           <button
             type="button"
             onClick={() => removeFile(index)}
-            aria-label={`Remove ${file.name}`}
+            aria-label={interpolate(t.upload.removeFile, { fileName: file.name })}
             className="shrink-0 rounded p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300 dark:focus-visible:outline-emerald-500"
           >
             <XIcon className="h-4 w-4" />

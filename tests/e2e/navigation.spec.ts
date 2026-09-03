@@ -15,7 +15,9 @@ test.describe("Desktop Chrome", () => {
     await expect(page).toHaveURL(/\/tools\/rotate-pdf$/);
   });
 
-  test("the language selector shows English as current and German as not yet available", async ({ page }) => {
+  test("the language selector shows English as current and Deutsch as a real link to the German homepage", async ({
+    page,
+  }) => {
     await page.goto("/");
     const selector = page.locator("header details").filter({ hasText: "English" });
     await expect(selector).not.toHaveAttribute("open", "");
@@ -23,12 +25,13 @@ test.describe("Desktop Chrome", () => {
     await selector.locator("summary").click();
     await expect(selector).toHaveAttribute("open", "");
     await expect(selector.getByText("Current")).toBeVisible();
-    await expect(selector.getByText("Deutsch")).toBeVisible();
-    await expect(selector.getByText("Coming soon")).toBeVisible();
 
-    // Neither option is a link: English has nothing to navigate to (it's
-    // the page already open), and German isn't a real page yet.
-    await expect(selector.getByRole("link")).toHaveCount(0);
+    // German is ready as of Week 2 Day 5 (see @/i18n/config's
+    // READY_LOCALES), so Deutsch is a real link, not a disabled
+    // "Coming soon" option: German-specific coverage (per-page mapping,
+    // English pages with no German equivalent) lives in
+    // tests/e2e/german-pages.spec.ts.
+    await expect(selector.getByRole("link", { name: "Deutsch" })).toHaveAttribute("href", "/de");
   });
 });
 
@@ -47,15 +50,13 @@ test.describe("Mobile Chrome", () => {
     await expect(page).toHaveURL(/\/tools\/split-pdf$/);
   });
 
-  test("the mobile menu includes a language selector that stays on the page", async ({ page }) => {
+  test("the mobile menu includes a language selector that links to the German homepage", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("button", { name: "Open menu" }).click();
 
     const mobileNav = page.locator("#mobile-nav");
     const selector = mobileNav.locator("details");
     await selector.locator("summary").click();
-    await expect(selector.getByText("Deutsch")).toBeVisible();
-    await expect(selector.getByText("Coming soon")).toBeVisible();
-    await expect(page).toHaveURL("/");
+    await expect(selector.getByRole("link", { name: "Deutsch" })).toHaveAttribute("href", "/de");
   });
 });

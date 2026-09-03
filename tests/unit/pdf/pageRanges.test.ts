@@ -84,3 +84,24 @@ describe("parsePageRanges", () => {
     expect(result).toEqual({ ok: false, error: expect.stringContaining('"xyz"') });
   });
 });
+
+describe("parsePageRanges with locale: \"de\" (used by the German Split PDF page)", () => {
+  it("still parses valid input the same way regardless of locale", () => {
+    expect(parsePageRanges("1-3, 5", 10, "de")).toEqual({ ok: true, pages: [1, 2, 3, 5] });
+  });
+
+  it("returns a German error message for empty input", () => {
+    const result = parsePageRanges("", 10, "de");
+    expect(result).toEqual({ ok: false, error: expect.stringContaining("Seite") });
+  });
+
+  it("returns a German error message for a page beyond the document's page count", () => {
+    const result = parsePageRanges("11", 10, "de");
+    expect(result).toEqual({ ok: false, error: expect.stringContaining("Seiten") });
+  });
+
+  it("defaults to English when no locale is passed, so the server-side authoritative check is unaffected", () => {
+    const result = parsePageRanges("11", 10);
+    expect(result).toEqual({ ok: false, error: expect.stringContaining("pages") });
+  });
+});

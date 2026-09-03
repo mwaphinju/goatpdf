@@ -30,14 +30,22 @@ export const en: Dictionary = {
     tryAgain: "Try again",
     download: "Download",
     cancel: "Cancel",
+    processAnotherFile: "Process another file",
   },
   upload: {
     dragDropLabel: "Drag and drop your PDF file here",
     dropHere: "Drop your file here",
+    browsePrefix: "or",
+    browseLink: "browse files",
+    browseSuffix: "from your device",
+    unsupportedFileType: "\"{fileName}\" isn't a supported file type.",
+    fileTooLargeDetail: "\"{fileName}\" is larger than the {maxSizeMB} MB limit.",
+    removeFile: "Remove {fileName}",
   },
   processing: {
     processing: "Processing",
     pleaseWait: "This can take a moment.",
+    processingFile: "Processing your file…",
   },
   errors: {
     networkError: "Network error. Please check your connection and try again.",
@@ -48,6 +56,15 @@ export const en: Dictionary = {
   },
   success: {
     downloadReady: "Your file is ready to download.",
+  },
+  pageStatus: {
+    reading: "Reading your PDF…",
+    pageCountSingular: "This PDF has {count} page.",
+    pageCountPlural: "This PDF has {count} pages.",
+  },
+  fileList: {
+    moveUp: "Move {fileName} up",
+    moveDown: "Move {fileName} down",
   },
   a11y: {
     languageSelector: "Language",

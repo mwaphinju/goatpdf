@@ -10,6 +10,8 @@ import { trackProcessingCompleted, trackProcessingFailed, trackProcessingStarted
 import { downloadFile } from "@/lib/downloadFile";
 import { formatBytes } from "@/lib/format";
 import type { CompressionPreset } from "@/lib/pdf/compressPdf";
+import { DEFAULT_LOCALE, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionary";
 
 const TOOL_NAME = "compress-pdf";
 
@@ -25,21 +27,51 @@ type FlowState =
     }
   | { status: "error"; message: string };
 
-const PRESET_OPTIONS: { value: CompressionPreset; label: string; description: string }[] = [
-  { value: "recommended", label: "Recommended", description: "Balanced compression for everyday sharing." },
-  {
-    value: "high-quality",
-    label: "High Quality",
-    description: "Prioritizes image quality: expect a smaller size reduction.",
+const COPY = {
+  en: {
+    uploadLabel: "Drag and drop your PDF file here",
+    uploadHint: "Up to 50 MB. Files are processed privately and deleted automatically.",
+    compressing: "Compressing your PDF…",
+    compressFailed: "Something went wrong while compressing your file. Please try again.",
+    compressionLevel: "Compression level",
+    presets: [
+      { value: "recommended" as const, label: "Recommended", description: "Balanced compression for everyday sharing." },
+      { value: "high-quality" as const, label: "High Quality", description: "Prioritizes image quality: expect a smaller size reduction." },
+      { value: "maximum-compression" as const, label: "Maximum Compression", description: "Smallest possible file size: more visible quality loss on images." },
+    ],
+    originalSize: "Original size",
+    compressedSize: "Compressed size",
+    spaceSaved: "Space saved",
+    reduction: "Reduction",
+    alreadyOptimized:
+      "This PDF was already well optimized. We couldn't shrink it further without a real loss in quality, so we kept your original file intact.",
+    compressAction: "Compress PDF",
   },
-  {
-    value: "maximum-compression",
-    label: "Maximum Compression",
-    description: "Smallest possible file size: more visible quality loss on images.",
+  de: {
+    uploadLabel: "Ziehe deine PDF-Datei hierher",
+    uploadHint: "Bis zu 50 MB. Dateien werden vertraulich verarbeitet und automatisch gelöscht.",
+    compressing: "Deine PDF-Datei wird komprimiert…",
+    compressFailed: "Beim Komprimieren deiner Datei ist ein Fehler aufgetreten. Bitte versuche es erneut.",
+    compressionLevel: "Komprimierungsstufe",
+    presets: [
+      { value: "recommended" as const, label: "Empfohlen", description: "Ausgewogene Komprimierung für den alltäglichen Versand." },
+      { value: "high-quality" as const, label: "Hohe Qualität", description: "Priorisiert die Bildqualität: geringere Größenreduzierung." },
+      { value: "maximum-compression" as const, label: "Maximale Komprimierung", description: "Kleinstmögliche Dateigröße: sichtbarer Qualitätsverlust bei Bildern." },
+    ],
+    originalSize: "Ursprüngliche Größe",
+    compressedSize: "Komprimierte Größe",
+    spaceSaved: "Eingesparter Speicherplatz",
+    reduction: "Reduzierung",
+    alreadyOptimized:
+      "Diese PDF-Datei war bereits gut optimiert. Wir konnten sie ohne echten Qualitätsverlust nicht weiter verkleinern, daher haben wir deine Originaldatei unverändert gelassen.",
+    compressAction: "PDF komprimieren",
   },
-];
+} as const;
 
-export function CompressPdfTool() {
+export function CompressPdfTool({ locale = DEFAULT_LOCALE }: { locale?: Locale } = {}) {
+  const copy = COPY[locale];
+  const t = getDictionary(locale);
+  const PRESET_OPTIONS = copy.presets;
   const [files, setFiles] = useState<File[]>([]);
   const [preset, setPreset] = useState<CompressionPreset>("recommended");
   const [flow, setFlow] = useState<FlowState>({ status: "idle" });
@@ -70,7 +102,7 @@ export function CompressPdfTool() {
         trackProcessingFailed(TOOL_NAME);
         setFlow({
           status: "error",
-          message: data?.message ?? "Something went wrong while compressing your file. Please try again.",
+          message: data?.message ?? copy.compressFailed,
         });
         return;
       }
@@ -87,7 +119,7 @@ export function CompressPdfTool() {
       trackProcessingFailed(TOOL_NAME);
       setFlow({
         status: "error",
-        message: "Network error. Please check your connection and try again.",
+        message: t.errors.networkError,
       });
     }
   }
@@ -108,27 +140,24 @@ export function CompressPdfTool() {
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-6 dark:border-emerald-800 dark:bg-emerald-950">
           <dl className="grid grid-cols-2 gap-x-6 gap-y-4 text-sm sm:grid-cols-4">
             <div>
-              <dt className="text-slate-600 dark:text-slate-400">Original size</dt>
+              <dt className="text-slate-600 dark:text-slate-400">{copy.originalSize}</dt>
               <dd className="text-base font-semibold text-slate-900 dark:text-white">{formatBytes(flow.originalSize)}</dd>
             </div>
             <div>
-              <dt className="text-slate-600 dark:text-slate-400">Compressed size</dt>
+              <dt className="text-slate-600 dark:text-slate-400">{copy.compressedSize}</dt>
               <dd className="text-base font-semibold text-slate-900 dark:text-white">{formatBytes(flow.compressedSize)}</dd>
             </div>
             <div>
-              <dt className="text-slate-600 dark:text-slate-400">Space saved</dt>
+              <dt className="text-slate-600 dark:text-slate-400">{copy.spaceSaved}</dt>
               <dd className="text-base font-semibold text-slate-900 dark:text-white">{formatBytes(spaceSaved)}</dd>
             </div>
             <div>
-              <dt className="text-slate-600 dark:text-slate-400">Reduction</dt>
+              <dt className="text-slate-600 dark:text-slate-400">{copy.reduction}</dt>
               <dd className="text-base font-semibold text-emerald-700 dark:text-emerald-400">{percentReduction}%</dd>
             </div>
           </dl>
           {percentReduction === 0 && (
-            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
-              This PDF was already well optimized. We couldn&apos;t shrink it further without a real loss
-              in quality, so we kept your original file intact.
-            </p>
+            <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">{copy.alreadyOptimized}</p>
           )}
         </div>
 
@@ -138,13 +167,14 @@ export function CompressPdfTool() {
           downloadUrl={flow.downloadUrl}
           onDownload={handleDownload}
           onReset={reset}
+          locale={locale}
         />
       </div>
     );
   }
 
   if (flow.status === "processing") {
-    return <ProcessingState label="Compressing your PDF…" />;
+    return <ProcessingState label={copy.compressing} />;
   }
 
   return (
@@ -156,13 +186,14 @@ export function CompressPdfTool() {
         maxSizeMB={50}
         files={files}
         onFilesChange={setFiles}
-        label="Drag and drop your PDF file here"
-        hint="Up to 50 MB. Files are processed privately and deleted automatically."
+        label={copy.uploadLabel}
+        hint={copy.uploadHint}
+        locale={locale}
       />
 
       {file && (
         <fieldset className="flex flex-col gap-3">
-          <legend className="text-sm font-medium text-slate-900 dark:text-white">Compression level</legend>
+          <legend className="text-sm font-medium text-slate-900 dark:text-white">{copy.compressionLevel}</legend>
           {PRESET_OPTIONS.map((option) => (
             <label
               key={option.value}
@@ -188,11 +219,12 @@ export function CompressPdfTool() {
       {flow.status === "error" && <ErrorMessage message={flow.message} />}
 
       <ToolActionBar
-        actionLabel="Compress PDF"
+        actionLabel={copy.compressAction}
         onAction={handleCompress}
         disabled={!file}
         showReset={file !== null}
         onReset={reset}
+        locale={locale}
       />
     </div>
   );

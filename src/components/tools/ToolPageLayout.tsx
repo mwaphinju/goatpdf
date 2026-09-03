@@ -38,6 +38,22 @@ export function ToolPageLayout({ tool, children }: { tool: ToolDefinition; child
             </p>
           </div>
 
+          {tool.whyUseIt.length > 0 && (
+            <section>
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Why use GOAT PDF?</h2>
+              <ul className="mt-3 flex flex-col gap-2">
+                {tool.whyUseIt.map((reason) => (
+                  <li key={reason} className="flex gap-2 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                    <span aria-hidden className="text-emerald-600 dark:text-emerald-400">
+                      •
+                    </span>
+                    <span>{reason}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           <section>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">How it works</h2>
             <ol className="mt-3 flex flex-col gap-3">

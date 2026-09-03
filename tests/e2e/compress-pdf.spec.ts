@@ -44,10 +44,15 @@ test.describe("Compress PDF", () => {
     await page.getByRole("button", { name: "Compress PDF" }).click();
     await expect(page.getByText("Compressing your PDF")).toBeVisible();
 
-    await expect(page.getByText("Original size")).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText("Compressed size")).toBeVisible();
-    await expect(page.getByText("Space saved")).toBeVisible();
-    await expect(page.getByText("Reduction")).toBeVisible();
+    // Scoped to <dt> specifically (the stats card's labels) rather than a
+    // page-wide text search — the page also renders an FAQ <dl>, and FAQ
+    // answers are free-form content that can legitimately contain any of
+    // these words (e.g. "...a smaller size reduction...") without that
+    // being a real collision with the stats card itself.
+    await expect(page.locator("dt", { hasText: "Original size" })).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("dt", { hasText: "Compressed size" })).toBeVisible();
+    await expect(page.locator("dt", { hasText: "Space saved" })).toBeVisible();
+    await expect(page.locator("dt", { hasText: "Reduction" })).toBeVisible();
 
     const originalStats = await fs.stat(IMAGE_HEAVY_FILE);
 
@@ -74,7 +79,7 @@ test.describe("Compress PDF", () => {
     await page.locator('input[type="file"]').setInputFiles(SCANNED_FILE);
 
     await page.getByRole("button", { name: "Compress PDF" }).click();
-    await expect(page.getByText("Reduction")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("dt", { hasText: "Reduction" })).toBeVisible({ timeout: 30_000 });
 
     const reductionText = await page.locator("dd.text-emerald-700").textContent();
     expect(reductionText).toMatch(/^\d+%$/);
@@ -85,7 +90,7 @@ test.describe("Compress PDF", () => {
     await page.locator('input[type="file"]').setInputFiles(SMALL_FILE);
 
     await page.getByRole("button", { name: "Compress PDF" }).click();
-    await expect(page.getByText("Reduction")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("dt", { hasText: "Reduction" })).toBeVisible({ timeout: 30_000 });
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download" }).click();
@@ -104,7 +109,7 @@ test.describe("Compress PDF", () => {
     await page.locator('input[type="file"]').setInputFiles(LARGE_FILE);
 
     await page.getByRole("button", { name: "Compress PDF" }).click();
-    await expect(page.getByText("Reduction")).toBeVisible({ timeout: 45_000 });
+    await expect(page.locator("dt", { hasText: "Reduction" })).toBeVisible({ timeout: 45_000 });
   });
 
   test("gracefully reports little or no further reduction on an already-compressed PDF, never growing it", async ({
@@ -115,7 +120,7 @@ test.describe("Compress PDF", () => {
     await page.getByRole("radio", { name: /^Maximum Compression/ }).check();
 
     await page.getByRole("button", { name: "Compress PDF" }).click();
-    await expect(page.getByText("Reduction")).toBeVisible({ timeout: 30_000 });
+    await expect(page.locator("dt", { hasText: "Reduction" })).toBeVisible({ timeout: 30_000 });
 
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download" }).click();

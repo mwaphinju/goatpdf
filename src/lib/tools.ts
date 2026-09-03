@@ -33,6 +33,8 @@ export interface ToolDefinition {
   metaDescription: string;
   /** A one-line, factual statement of accepted input / produced output formats, derived from what the tool actually accepts (see `accept`) — shown on the tool page for both users and crawlers. */
   supportedFormats: string;
+  /** 3 genuine, verifiable differentiators for this specific tool — privacy/process facts plus a tool-specific angle. Not identical boilerplate repeated on every page. */
+  whyUseIt: string[];
   /** 2-3 genuine, concrete scenarios this tool actually solves — shown in a short "Common use cases" section. Not generic filler; each one ties to real functionality. */
   useCases: string[];
   /** Longer, on-page introduction paragraph — distinct wording from `description`, shown as real page content. */
@@ -59,6 +61,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Compress PDF files online for free. Reduce file size while preserving quality — no sign-up, no watermark, and files are deleted automatically after processing.",
     supportedFormats: "PDF in, PDF out.",
+    whyUseIt: [
+      "No accounts, no watermark, and no fixed compression promise — just the real, measured result for your specific file.",
+      "Three genuinely different presets (Recommended, High Quality, Maximum Compression) instead of one-size-fits-all compression.",
+      "Uploaded and compressed files are processed privately on our server and deleted automatically afterward.",
+    ],
     useCases: [
       "Getting a scanned document under an email attachment size limit",
       "Shrinking a PDF before uploading it to a form or portal with a size cap",
@@ -82,6 +89,21 @@ export const tools: ToolDefinition[] = [
         answer:
           "Some — compression re-encodes embedded photos at a slightly lower quality to save space. Recommended balances size and quality, High Quality keeps images closer to the original, and Maximum Compression prioritizes the smallest possible file.",
       },
+      {
+        question: "Can I compress a PDF for email?",
+        answer:
+          "Yes — many email providers cap attachments around 20–25 MB. Compress PDF is a fast way to bring a large scanned document under that limit before sending it, without installing anything.",
+      },
+      {
+        question: "What's the difference between the three compression levels?",
+        answer:
+          "Recommended balances size and quality for everyday sharing. High Quality keeps images closer to the original with a smaller size reduction. Maximum Compression produces the smallest possible file, with more visible quality loss in images.",
+      },
+      {
+        question: "Is my file safe when I compress it online?",
+        answer:
+          "Yes — files are uploaded over a private connection, processed on our server, and deleted automatically after you download the result (or after a short time if you don't). See the Privacy Policy for the exact details.",
+      },
     ],
     relatedSlugs: ["merge-pdf", "split-pdf", "pdf-to-word"],
     actionLabel: "Compress PDF",
@@ -98,6 +120,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Merge PDF files online for free. Combine multiple PDFs into one document in any order you choose — fast, private, and no account required.",
     supportedFormats: "PDF in, PDF out.",
+    whyUseIt: [
+      "No accounts, no watermark on the merged file, and no page-count games — just upload, reorder, and merge.",
+      "Reorder by dragging or with up/down buttons — the merged file comes out in exactly the order you set.",
+      "Files are processed privately on our server and deleted automatically afterward.",
+    ],
     useCases: [
       "Combining multiple scanned pages into one document",
       "Assembling a report from separate PDF sections",
@@ -120,6 +147,20 @@ export const tools: ToolDefinition[] = [
         answer:
           "Not directly inside the merged file — but you can run the result through Rotate PDF or Delete PDF Pages afterward, or merge again starting from a different file order.",
       },
+      {
+        question: "Does merging change the original files?",
+        answer:
+          "No — your original files aren't modified. Merging produces a new, separate combined PDF; the files you uploaded are only used to build it and are deleted afterward like any other job.",
+      },
+      {
+        question: "Can I merge scanned PDFs?",
+        answer: "Yes — Merge PDF works with any valid PDF file regardless of how it was created, including scanned documents.",
+      },
+      {
+        question: "What happens if one of my files is corrupted?",
+        answer:
+          "The merge is rejected with a clear error naming the problem, rather than silently producing a broken result — your other selected files aren't lost, so you can remove the bad one and try again.",
+      },
     ],
     relatedSlugs: ["split-pdf", "compress-pdf", "jpg-to-pdf"],
     actionLabel: "Merge PDFs",
@@ -136,6 +177,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Split a PDF online for free. Extract specific pages or break a PDF into individual files in seconds — no software to install.",
     supportedFormats: "PDF in, PDF or ZIP out.",
+    whyUseIt: [
+      "See your PDF's real page count before you decide how to split it — no guessing.",
+      "Two real modes: split into individual pages, or extract exactly the range you need.",
+      "Files are processed privately on our server and deleted automatically after your download.",
+    ],
     useCases: [
       "Pulling a single chapter or section out of a long PDF",
       "Separating a multi-invoice PDF into individual invoices",
@@ -158,6 +204,20 @@ export const tools: ToolDefinition[] = [
         question: "What do I get if I split into individual pages?",
         answer: "A ZIP file containing one PDF per page, numbered in order.",
       },
+      {
+        question: "Can I extract just one page from a PDF?",
+        answer: "Yes — type a single page number (e.g. 5) as your range, and Split PDF extracts just that page into its own PDF.",
+      },
+      {
+        question: "Does splitting change my original PDF?",
+        answer:
+          "No — splitting produces new file(s) from your upload; the original isn't modified, and everything is deleted from our server after processing.",
+      },
+      {
+        question: "What if I enter an invalid page range?",
+        answer:
+          "You'll see a clear validation error immediately, before you even submit — for example, a range beyond the PDF's actual page count is caught right in the browser.",
+      },
     ],
     relatedSlugs: ["merge-pdf", "delete-pdf-pages", "rotate-pdf"],
     actionLabel: "Split PDF",
@@ -174,6 +234,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Rotate PDF pages online for free. Fix sideways or upside-down pages instantly, for an entire document or just the pages you choose.",
     supportedFormats: "PDF in, PDF out.",
+    whyUseIt: [
+      "Rotation is saved into the file itself, not just how your screen happens to display it.",
+      "Rotate everything at once, or pick exactly the pages that need fixing.",
+      "Files are processed privately on our server and deleted automatically afterward.",
+    ],
     useCases: [
       "Fixing pages scanned in the wrong orientation",
       "Correcting a photo-to-PDF conversion that came out sideways",
@@ -197,6 +262,20 @@ export const tools: ToolDefinition[] = [
         answer:
           "Rotation is additive — rotating a page that's already at 90° by another 90° takes it to 180°, matching how PDF viewers already display it.",
       },
+      {
+        question: "Does this rotate the file permanently, or just how it looks on screen?",
+        answer:
+          "Permanently — GOAT PDF changes the actual page rotation stored in the PDF file, so it opens correctly-oriented in any viewer afterward. That's different from rotating the view in a PDF reader, which only changes how that one session displays the file and doesn't save anything.",
+      },
+      {
+        question: "Will rotating change my original PDF?",
+        answer: "No — you get a new, rotated file to download; the file you uploaded isn't altered and is deleted from our server afterward.",
+      },
+      {
+        question: "Can I undo a rotation?",
+        answer:
+          "There's no direct \"undo,\" but since rotation is additive you can rotate the result again (e.g. another 90°) to correct it, or start over with your original file.",
+      },
     ],
     relatedSlugs: ["delete-pdf-pages", "split-pdf", "compress-pdf"],
     actionLabel: "Rotate PDF",
@@ -213,6 +292,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Delete pages from a PDF online for free. Remove unwanted pages in seconds while keeping the rest of your document intact.",
     supportedFormats: "PDF in, PDF out.",
+    whyUseIt: [
+      "See exactly which page you're removing before you commit — a visual page grid, not a blind page number.",
+      "GOAT PDF won't let you delete every page, protecting you from creating a broken, unusable file.",
+      "Files are processed privately on our server and deleted automatically afterward.",
+    ],
     useCases: [
       "Removing a blank cover sheet added by a scanner",
       "Deleting an outdated page before resending a document",
@@ -235,6 +319,19 @@ export const tools: ToolDefinition[] = [
         question: "Does deleting pages change the order of the rest?",
         answer: "No — the remaining pages keep their original order, just renumbered to close the gap.",
       },
+      {
+        question: "Can I remove more than one page at once?",
+        answer: "Yes — select as many pages as you want from the grid and they're all removed in a single download.",
+      },
+      {
+        question: "Will deleting pages change my original PDF?",
+        answer:
+          "No — you get a new file with those pages removed; your original upload isn't modified and is deleted from our server afterward.",
+      },
+      {
+        question: "Can I preview which pages I'm about to delete?",
+        answer: "Yes — the page grid shows every page by number, so you can double-check your selection before downloading.",
+      },
     ],
     relatedSlugs: ["split-pdf", "rotate-pdf", "compress-pdf"],
     actionLabel: "Delete Pages",
@@ -251,6 +348,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Convert JPG or PNG images to PDF online for free. Combine multiple images into a single PDF with your choice of page size and layout.",
     supportedFormats: "JPG or PNG in, PDF out.",
+    whyUseIt: [
+      "Accepts JPG and PNG together in the same batch — no need to convert formats first.",
+      "Reorder your images before converting, so the PDF comes out in the right sequence.",
+      "Choose page size, orientation, and margin instead of a one-size-fits-all layout.",
+    ],
     useCases: [
       "Turning photographed receipts into a single PDF for an expense report",
       "Converting a stack of phone-scanned pages into one document",
@@ -273,6 +375,19 @@ export const tools: ToolDefinition[] = [
         answer:
           "Instead of a fixed page size like A4 or Letter, each page matches that image's own proportions, so nothing gets cropped or letterboxed.",
       },
+      {
+        question: "How many images can I convert at once?",
+        answer: "Up to 30 images per batch, combined into a single PDF with one page per image.",
+      },
+      {
+        question: "What page sizes are available?",
+        answer: "A4, Letter, or \"Fit to image,\" where each page matches that image's own proportions instead of a fixed size.",
+      },
+      {
+        question: "Will converting change my original images?",
+        answer:
+          "No — your uploaded images aren't modified; a new PDF is generated from them and your images are deleted from our server afterward.",
+      },
     ],
     relatedSlugs: ["pdf-to-jpg", "merge-pdf", "compress-pdf"],
     actionLabel: "Convert to PDF",
@@ -289,6 +404,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Convert PDF pages to JPG images online for free. Turn any page — or every page — into a high-quality image in seconds.",
     supportedFormats: "PDF in, JPG or ZIP out.",
+    whyUseIt: [
+      "Three real quality presets, not a single fixed output size.",
+      "Convert every page, or just the ones you actually need.",
+      "Get a single JPG for one page, or a ZIP for multiple — no unnecessary extra steps.",
+    ],
     useCases: [
       "Getting a page as an image to paste into a slideshow or document",
       "Sharing a document on a platform that only accepts images",
@@ -305,12 +425,27 @@ export const tools: ToolDefinition[] = [
       {
         question: "What resolution are the images?",
         answer:
-          "It depends on the quality level you choose — higher quality produces a larger, sharper image at a larger file size.",
+          "It depends on the quality preset you choose — Low, Medium, and High each render pages at a different size and JPEG compression level, trading file size for sharpness. Higher quality means a larger, sharper image and a bigger file.",
       },
       {
         question: "What if I only convert one page?",
         answer:
           "You get a single JPG file directly, no ZIP — the ZIP only kicks in when you're converting more than one page at once.",
+      },
+      {
+        question: "Does the output keep the same page proportions as my PDF?",
+        answer:
+          "Yes — each image matches its source page's own proportions, so a portrait page produces a portrait image and a landscape page produces a landscape image.",
+      },
+      {
+        question: "Will converting change my original PDF?",
+        answer:
+          "No — your uploaded PDF isn't modified; the images are generated from it and everything is deleted from our server afterward.",
+      },
+      {
+        question: "Can I convert just a few specific pages instead of the whole PDF?",
+        answer:
+          "Yes — choose \"Select pages\" and pick exactly which pages to convert from the page grid, instead of converting the entire document.",
       },
     ],
     relatedSlugs: ["jpg-to-pdf", "compress-pdf", "split-pdf"],
@@ -328,6 +463,11 @@ export const tools: ToolDefinition[] = [
     metaDescription:
       "Convert PDF to an editable Word document online for free. Get a downloadable .docx file you can actually edit — no account required.",
     supportedFormats: "PDF in, DOCX out.",
+    whyUseIt: [
+      "Runs on a real, local document-conversion engine — your file never leaves our server to a third-party API.",
+      "Produces a genuine, editable .docx file, not a locked preview or an image-based copy.",
+      "Honest about limits: complex layouts may need manual review, and we say so before and after conversion.",
+    ],
     useCases: [
       "Editing the text of a PDF you no longer have the source file for",
       "Updating a contract or form template originally received as a PDF",
@@ -350,6 +490,21 @@ export const tools: ToolDefinition[] = [
         question: "What does the conversion actually run on?",
         answer:
           "A real, local document-conversion engine, not a third-party cloud API — so your file never leaves GOAT PDF's own server during conversion.",
+      },
+      {
+        question: "Can I convert scanned PDFs to Word?",
+        answer:
+          "GOAT PDF converts the real text and layout structure already in a PDF. A scanned PDF that's just a photo of a page, with no underlying text layer, won't convert into editable text, since there's no text to extract — this tool doesn't include OCR.",
+      },
+      {
+        question: "Is the Word file actually editable?",
+        answer:
+          "Yes — the output is a genuine .docx file you can open and edit directly in Microsoft Word, Google Docs, or any compatible app, not a flattened image or a read-only preview.",
+      },
+      {
+        question: "Will converting change my original PDF?",
+        answer:
+          "No — your uploaded PDF isn't modified; the Word document is generated from it, and both files are deleted from our server afterward.",
       },
     ],
     relatedSlugs: ["compress-pdf", "merge-pdf", "split-pdf"],

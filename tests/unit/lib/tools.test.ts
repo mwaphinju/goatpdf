@@ -20,11 +20,27 @@ describe("tools registry", () => {
     }
   });
 
-  it("gives every tool a non-empty intro, at least 2 how-to steps, and at least 1 FAQ", () => {
+  it("gives every tool a non-empty intro, at least 2 how-to steps, and 4-6 genuinely distinct FAQs", () => {
     for (const tool of tools) {
       expect(tool.intro.length).toBeGreaterThan(0);
       expect(tool.howTo.length).toBeGreaterThanOrEqual(2);
-      expect(tool.faqs.length).toBeGreaterThanOrEqual(1);
+      expect(tool.faqs.length).toBeGreaterThanOrEqual(4);
+      expect(tool.faqs.length).toBeLessThanOrEqual(6);
+
+      const questions = tool.faqs.map((faq) => faq.question);
+      expect(new Set(questions).size).toBe(questions.length);
+      for (const faq of tool.faqs) {
+        expect(faq.answer.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("gives every tool at least 3 genuine reasons to use it", () => {
+    for (const tool of tools) {
+      expect(tool.whyUseIt.length).toBeGreaterThanOrEqual(3);
+      for (const reason of tool.whyUseIt) {
+        expect(reason.length).toBeGreaterThan(0);
+      }
     }
   });
 

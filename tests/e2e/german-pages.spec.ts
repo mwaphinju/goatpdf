@@ -213,4 +213,27 @@ test.describe("German mobile navigation", () => {
       "/de/tools/pdf-zusammenfuegen",
     );
   });
+
+  test("the mobile language selector shows Deutsch as the current language, not just an icon", async ({ page }) => {
+    await page.goto("/de");
+    await page.getByRole("button", { name: "Menü öffnen" }).click();
+    const mobileNav = page.locator("#mobile-nav");
+    const selector = mobileNav.locator("details");
+    await expect(selector.locator("summary").getByText("Deutsch")).toBeVisible();
+  });
+
+  test("the mobile language selector navigates from a German tool page back to its exact English counterpart", async ({
+    page,
+  }) => {
+    await page.goto("/de/tools/pdf-teilen");
+    await page.getByRole("button", { name: "Menü öffnen" }).click();
+
+    const mobileNav = page.locator("#mobile-nav");
+    const selector = mobileNav.locator("details").filter({ hasText: "Deutsch" });
+    await selector.locator("summary").click();
+    await selector.getByRole("link", { name: "English" }).click();
+
+    await expect(page).toHaveURL(/\/tools\/split-pdf$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  });
 });

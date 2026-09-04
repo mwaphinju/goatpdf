@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import type { SyntheticEvent } from "react";
 import { DEFAULT_LOCALE, LOCALE_NAMES, SUPPORTED_LOCALES, isLocaleReady, type Locale } from "@/i18n/config";
 import { DE_TO_EN_PATH, EN_TO_DE_PATH } from "@/i18n/pageMap";
 import { GlobeIcon, ChevronDownIcon } from "@/components/icons";
@@ -12,6 +14,17 @@ import { GlobeIcon, ChevronDownIcon } from "@/components/icons";
  * locale from the page it's rendered on: German pages pass
  * currentLocale="de", every English page (the default) needs nothing
  * extra.
+ *
+ * Shared verbatim between the desktop nav (an inline flex item, sized to
+ * its own content) and the mobile nav (a full-width row at the bottom of
+ * the open menu). The summary row uses `justify-between` unconditionally:
+ * on desktop that's a no-op (the <details> box is only ever as wide as
+ * its own content there, so there's no extra space to distribute), and on
+ * mobile it's exactly what pushes the chevron to the row's right edge
+ * while the globe icon and current language name sit together on the
+ * left, matching the mobile menu's other rows instead of leaving a mostly
+ * empty block (see GOAT_PDF_MOBILE_LANGUAGE_SELECTOR_FIX_REPORT.md for
+ * the before/after).
  *
  * A ready, non-current locale becomes a real link, never a link to a page
  * that doesn't exist: on an English page with a specific German
@@ -26,21 +39,29 @@ import { GlobeIcon, ChevronDownIcon } from "@/components/icons";
  */
 export function LanguageSelector({ currentLocale = DEFAULT_LOCALE }: { currentLocale?: Locale } = {}) {
   const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
 
   function targetPathFor(locale: Locale): string {
     if (locale === "de") return EN_TO_DE_PATH[pathname] ?? "/de";
     return DE_TO_EN_PATH[pathname] ?? "/";
   }
 
+  function handleToggle(event: SyntheticEvent<HTMLDetailsElement>) {
+    setIsOpen(event.currentTarget.open);
+  }
+
   return (
-    <details className="group relative">
+    <details className="group relative" onToggle={handleToggle}>
       <summary
-        className="flex cursor-pointer list-none items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 [&::-webkit-details-marker]:hidden dark:text-slate-300 dark:hover:bg-slate-800"
+        className="flex min-h-12 w-full cursor-pointer list-none items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 [&::-webkit-details-marker]:hidden md:min-h-0 md:w-auto dark:text-slate-300 dark:hover:bg-slate-800"
         aria-label={`Language: ${LOCALE_NAMES[currentLocale]}`}
+        aria-expanded={isOpen}
       >
-        <GlobeIcon className="h-4 w-4" />
-        <span className="hidden sm:inline">{LOCALE_NAMES[currentLocale]}</span>
-        <ChevronDownIcon className="h-4 w-4 transition-transform group-open:rotate-180" />
+        <span className="flex items-center gap-1.5">
+          <GlobeIcon className="h-4 w-4 shrink-0" />
+          <span>{LOCALE_NAMES[currentLocale]}</span>
+        </span>
+        <ChevronDownIcon className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
       </summary>
       <div
         role="group"
